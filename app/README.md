@@ -22,9 +22,9 @@ information that is needed for each function via arguments.
 All interaction in the application may require a Context. The Context
 includes (for example):
 
-    - app-engine.Context
-    - tx (is this in a transaction?)
-    - util.SafeStore (contains all information that normally goes into request attributes)
+  - app-engine.Context
+  - tx (is this in a transaction?)
+  - util.SafeStore (contains all information that normally goes into request attributes)
 
 Handlers should take an app.Context. The top-level handler should create it
 and pass it down the function chain. WebRouter supports this natively with a
@@ -38,22 +38,22 @@ exposed by an app.Context.
 
 Some typical things the Driver will support:
 
-    - SendMail(...)
-    - Give me an appropriate *http.Client
-    - Store some entities in the backend
-    - Load an entity from backend given its id, or some of its properties
-    - ...
+  - SendMail(...)
+  - Give me an appropriate *http.Client
+  - Store some entities in the backend
+  - Load an entity from backend given its id, or some of its properties
+  - ...
 
 
 ## MISC
 
 Some misc info:
 
-     - To allow for rpc, testing, and other uses, we provide a header called
-       "Z-App-Json-Response-On-Error" (app.UseJsonOnErrHttpHeaderKey).
-       If set, then we return errors as a json string, as opposed to showing the
-       user friendly, and browser friendly, error view page.
-       RPC, Testing, etc will set this on their requests.
+   - To allow for rpc, testing, and other uses, we provide a header called
+     "Z-App-Json-Response-On-Error" (app.UseJsonOnErrHttpHeaderKey).
+     If set, then we return errors as a json string, as opposed to showing the
+     user friendly, and browser friendly, error view page.
+     RPC, Testing, etc will set this on their requests.
 
 ```
     This is the base of an actual application. It sets up everything and handles requests.
@@ -98,15 +98,15 @@ A Route is Matched if all its Routes or Route Expressions match.
 
 It works as follows:
 
-    - A Route is a node in a tree. It can have children, and also have matchExpr to determine
-      whether to proceed walking down the tree or not.
-    - At runtime, the package looks for the deepest Route which can handle a Request,
-      in sequence. This means that a branch is checked, and if it matches, then its children
-      are checked. All this recursively. If none of it's children can handle the request, then
-      the branch handles it.
-    - You can also reverse-create a URL for a route, from the parameters of the route. For example,
-      if a route has Host: {hostname}.mydomain.com, and Path: /show/{id}, you should be able to
-      reconstruct the URL for that host, passing appropriate parameters for hostname and id.
+  - A Route is a node in a tree. It can have children, and also have matchExpr to determine
+    whether to proceed walking down the tree or not.
+  - At runtime, the package looks for the deepest Route which can handle a Request,
+    in sequence. This means that a branch is checked, and if it matches, then its children
+    are checked. All this recursively. If none of it's children can handle the request, then
+    the branch handles it.
+  - You can also reverse-create a URL for a route, from the parameters of the route. For example,
+    if a route has Host: {hostname}.mydomain.com, and Path: /show/{id}, you should be able to
+    reconstruct the URL for that host, passing appropriate parameters for hostname and id.
 
 An application will define functions with the signature:
 
@@ -122,8 +122,8 @@ In addition, during a Dispatch, when Paths are matched, it will look for
 named variables and store them in a request-scoped store. This way, they are
 not parsed again, and can be used for:
 
-    - during request handling, to get variables
-    - during URL generation of a named route
+  - during request handling, to get variables
+  - during URL generation of a named route
 
 An application using the router will have pseudo-code like:
 
