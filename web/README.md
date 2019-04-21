@@ -16,7 +16,11 @@ using `go`.
 
 It adds clean seamless and easy to use support for:
 
-- access logging - pipelines - template management - shared storage - ...
+    - access logging
+    - pipelines
+    - template management
+    - shared storage
+    - ...
 
 
 ## TEMPLATES
@@ -26,12 +30,10 @@ application.
 
 The model is as below:
 
-```
     - Each view page (e.g. landing page) corresponds to a given Template (set)
     - A config file defines the templates, so we can re-use templates
     - A Tree is used, so that a TemplateSet can be easily configured to share templates. E.g.
       All the core templates share the same header and footers.
-```
 
 ## Typical usage for loading from within main app
 
