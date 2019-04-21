@@ -1,13 +1,12 @@
 # go-serverapp
 
-The `go-serverapp` library contains utility packages used across multiple projects 
-within this repository organization.
+The `go-serverapp` library contains libraries used by server applications.
 
 It includes the following packages:
 
-- app
-- db
-- web
+- app [README](app/README.md)
+- db [README](db/README.md)
+- web [README](web/README.md)
 
 ## Installing
 
