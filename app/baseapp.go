@@ -1,4 +1,7 @@
 /*
+
+Base App
+
  This is the base of an actual application. It sets up everything and handles requests.
  By design, it fully implements app.AppDriver.
 
@@ -37,11 +40,13 @@ import (
 	"net/http/httputil"
 	"reflect"
 	"regexp"
+
 	// "runtime"
 	"strconv"
 	"sync"
 	"sync/atomic" //"runtime/debug"
 	"time"
+
 	//"text/template"
 	"github.com/ugorji/go-common/logging"
 	"github.com/ugorji/go-common/safestore"

@@ -49,11 +49,13 @@ Some typical things the Driver will support:
 
 Some misc info:
 
-   - To allow for rpc, testing, and other uses, we provide a header called
-     "Z-App-Json-Response-On-Error" (app.UseJsonOnErrHttpHeaderKey).
-     If set, then we return errors as a json string, as opposed to showing the
-     user friendly, and browser friendly, error view page.
-     RPC, Testing, etc will set this on their requests.
+  - To allow for rpc, testing, and other uses, we provide a header called
+    "Z-App-Json-Response-On-Error" (app.UseJsonOnErrHttpHeaderKey).
+    If set, then we return errors as a json string, as opposed to showing the
+    user friendly, and browser friendly, error view page.
+    RPC, Testing, etc will set this on their requests.
+
+## Base App
 
 ```
     This is the base of an actual application. It sets up everything and handles requests.
