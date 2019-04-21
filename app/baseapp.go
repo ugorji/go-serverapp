@@ -2,10 +2,10 @@
 
 Base App
 
- This is the base of an actual application. It sets up everything and handles requests.
- By design, it fully implements app.AppDriver.
+This is the base of an actual application. It sets up everything and handles requests.
+By design, it fully implements app.AppDriver.
 
- It sets up the following specifically:
+It sets up the following specifically:
    - logging (calling logging.RunAsync if desired)
    - app Driver (setup app.Svc)
    - Initialize template sets for all the different views.
@@ -15,15 +15,15 @@ Base App
    - map all requests to its builtin dispatcher
      (which wraps router.Dispatch and does pre and post things)
 
- Why we did things a certain way
+Why we did things a certain way:
    - Wrapping ResponseWriter:
      So we can know if the headers have been written (ie response committed)
 
- We need to differentiate code for dev environment from prod environment:
+We need to differentiate code for dev environment from prod environment:
    - Tests should not be shipped on prod
    - LoadInit, other dev things should not even run on prod
 
- This package expects the following:
+This package expects the following:
    - Define a route called "landing" (which is typically mapped to Path: /)
      so we can route to the landing page or show the link to the landing page
    - Define views called "error", "notfound" so we can show something when either is encountered from code

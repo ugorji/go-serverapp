@@ -55,37 +55,40 @@ Some misc info:
     user friendly, and browser friendly, error view page.
     RPC, Testing, etc will set this on their requests.
 
+
 ## Base App
 
-```
-    This is the base of an actual application. It sets up everything and handles requests.
-    By design, it fully implements app.AppDriver.
+This is the base of an actual application. It sets up everything and handles
+requests. By design, it fully implements app.AppDriver.
 
-    It sets up the following specifically:
-      - logging (calling logging.RunAsync if desired)
-      - app Driver (setup app.Svc)
-      - Initialize template sets for all the different views.
-        Including creating a function map for the templates and defining an appropriate Render method
-      - Setup Routing logic ie how to route requests
-      - Setup OauthHandles for all our supported oauth providers
-      - map all requests to its builtin dispatcher
-        (which wraps router.Dispatch and does pre and post things)
+It sets up the following specifically:
 
-    Why we did things a certain way
-      - Wrapping ResponseWriter:
-        So we can know if the headers have been written (ie response committed)
+  - logging (calling logging.RunAsync if desired)
+  - app Driver (setup app.Svc)
+  - Initialize template sets for all the different views.
+    Including creating a function map for the templates and defining an appropriate Render method
+  - Setup Routing logic ie how to route requests
+  - Setup OauthHandles for all our supported oauth providers
+  - map all requests to its builtin dispatcher
+    (which wraps router.Dispatch and does pre and post things)
 
-    We need to differentiate code for dev environment from prod environment:
-      - Tests should not be shipped on prod
-      - LoadInit, other dev things should not even run on prod
+Why we did things a certain way:
 
-    This package expects the following:
-      - Define a route called "landing" (which is typically mapped to Path: /)
-        so we can route to the landing page or show the link to the landing page
-      - Define views called "error", "notfound" so we can show something when either is encountered from code
-      - Also define view called "apperror", and we just show its content when there's an error
-        without inheriting or depending on anyone else.
-```
+  - Wrapping ResponseWriter:
+    So we can know if the headers have been written (ie response committed)
+
+We need to differentiate code for dev environment from prod environment:
+
+  - Tests should not be shipped on prod
+  - LoadInit, other dev things should not even run on prod
+
+This package expects the following:
+
+  - Define a route called "landing" (which is typically mapped to Path: /)
+    so we can route to the landing page or show the link to the landing page
+  - Define views called "error", "notfound" so we can show something when either is encountered from code
+  - Also define view called "apperror", and we just show its content when there's an error
+    without inheriting or depending on anyone else.
 
 
 ## WEB ROUTER
