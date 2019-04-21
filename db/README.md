@@ -414,6 +414,9 @@ Some guidelines are below:
     - There is support for ensuring an entity has a valid Id before sending to datastore.
 ```
 
+## Exported Package API
+
+```go
 const EntityCacheKeyPfx = "db/db::" ...
 const StructInfoField = "_struct" ...
 var StructMetas = safestore.New(true) ...
@@ -444,40 +447,29 @@ func QueryAsString(parentKey app.Key, kind string, opts *app.QueryOpts, ...) (qS
 func QuerySupport(ctx app.Context, qString string, kind string, shape string, ...) (res []app.Key, lastqcur string, err error)
 func Save(ctx app.Context, entities ...interface{}) (err error)
 type CacheResult int
-```go
     const CacheMiss CacheResult = iota + 1 ...
     func CacheGet(ctx app.Context, keys []app.Key, dst []interface{}) (result []CacheResult, err error)
-```
 type CodecBytes interface{ ... }
-```go
     var Codec CodecBytes = gobCodec{}
-```
 type DatastoreKeyAware interface{ ... }
 type DbFieldMeta struct{ ... }
-```go
     func NewDbFieldMeta() *DbFieldMeta
-```
 type EntityNotFoundError string
 type FieldType int32
-```go
     const STRUC_FTYPE FieldType = iota + 1 ...
-```
 type FieldValueChecker int32
-```go
     const ALWAYS_FVC FieldValueChecker = iota + 1 ...
-```
 type PostLoadHooker interface{ ... }
 type PostSaveHooker interface{ ... }
 type PreSaveHooker interface{ ... }
 type Property struct{ ... }
 type PropertyList []Property
 type TypeMeta struct{ ... }
-```go
     func GetLoadedStructMetaFromKind(kind string, shape string) *TypeMeta
     func GetStructMeta(s interface{}) (tm *TypeMeta, err error)
     func GetStructMetaFromType(rt reflect.Type) (tm *TypeMeta, err error)
     func NewTypeMeta() *TypeMeta
-```
 
 BUG: Shape is not fully thought out. Consider removing it???
 
+```
