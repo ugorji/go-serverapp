@@ -1,5 +1,5 @@
 /*
-This package manages db interactions.
+Package db manages db interactions for server applications.
 
 DATASTORE
  

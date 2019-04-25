@@ -50,7 +50,7 @@ func (p *Pipeline) Next(w ResponseWriter, r *http.Request) {
 // Some pipes should not be closed because a pipeline is closing.
 // The pipeline did not open them, and shouldn't manage their lifecycle.
 // func (p *Pipeline) Close() error {
-// 	var merr zerror.Multi
+// 	var merr errorutil.Multi
 // 	for _, p := range p.s {
 // 		if c, ok := p.(io.Closer); ok {
 // 			merr = append(merr, c.Close())

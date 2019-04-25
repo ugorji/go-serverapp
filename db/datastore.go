@@ -16,9 +16,9 @@ import (
 
 	"github.com/ugorji/go-serverapp/app"
 	"github.com/ugorji/go-common/logging"
+	"github.com/ugorji/go-common/printf"
 	"github.com/ugorji/go-common/safestore"
-	"github.com/ugorji/go-common/util"
-	"github.com/ugorji/go-common/zerror"
+	"github.com/ugorji/go-common/errorutil"
 )
 
 type EntityNotFoundError string
@@ -147,7 +147,7 @@ func (d *dkeyInfo) String() string {
 
 //Queries should *typically* call this to postLoad
 func PostLoadNoCaching(ctx app.Context, key app.Key, dst interface{}) (err error) {
-	defer zerror.OnErrorf(1, &err, nil)
+	defer errorutil.OnErrorf(1, &err, nil)
 	if _, err = FromDatastoreKey(ctx, dst, key); err != nil {
 		return err
 	}
@@ -160,7 +160,7 @@ func PostLoadNoCaching(ctx app.Context, key app.Key, dst interface{}) (err error
 }
 
 func PostLoad(ctx app.Context, useCache bool, keys []app.Key, dst []interface{}) (err error) {
-	defer zerror.OnErrorf(1, &err, nil)
+	defer errorutil.OnErrorf(1, &err, nil)
 	for i := 0; i < len(dst); i++ {
 		if err = PostLoadNoCaching(ctx, keys[i], dst[i]); err != nil {
 			return
@@ -175,7 +175,7 @@ func PostLoad(ctx app.Context, useCache bool, keys []app.Key, dst []interface{})
 }
 
 func PreSave(ctx app.Context, useCache bool, keys []app.Key, dst []interface{}) (err error) {
-	defer zerror.OnErrorf(1, &err, nil)
+	defer errorutil.OnErrorf(1, &err, nil)
 	for _, d := range dst {
 		if d2, ok := d.(PreSaveHooker); ok {
 			if err = d2.PreSaveHook(); err != nil {
@@ -187,7 +187,7 @@ func PreSave(ctx app.Context, useCache bool, keys []app.Key, dst []interface{}) 
 }
 
 func PostSave(ctx app.Context, keys []app.Key, dst []interface{}) (err error) {
-	defer zerror.OnErrorf(1, &err, nil)
+	defer errorutil.OnErrorf(1, &err, nil)
 	//logging.Trace(nil, "Num Keys: %v, Num Objects: %v", len(keys), len(dst))
 	for i := 0; i < len(dst); i++ {
 		d := dst[i]
@@ -216,10 +216,10 @@ func PostSave(ctx app.Context, keys []app.Key, dst []interface{}) (err error) {
 //It's okay to pass nil dst to this function. We will return the
 //appropriate interface{}
 func Get(ctx app.Context, useCache bool, key app.Key, dst interface{}) (err error) {
-	defer zerror.OnErrorf(1, &err, nil)
+	defer errorutil.OnErrorf(1, &err, nil)
 	dsts := []interface{}{dst}
 	if err = Gets(ctx, useCache, []app.Key{key}, dsts); err != nil {
-		if errs, ok := err.(zerror.Multi); ok {
+		if errs, ok := err.(errorutil.Multi); ok {
 			err = errs[0]
 		}
 	}
@@ -229,7 +229,7 @@ func Get(ctx app.Context, useCache bool, key app.Key, dst interface{}) (err erro
 //This call supports passing nil members of the dst slice.
 //If nil, we will use an new instance of the type appropriate for the Key.
 func Gets(ctx app.Context, useCache bool, keys []app.Key, dst []interface{}) (err error) {
-	defer zerror.OnErrorf(1, &err, nil)
+	defer errorutil.OnErrorf(1, &err, nil)
 	//error checking first
 	//ensure same number of keys and dst
 	if len(keys) == 0 || len(keys) != len(dst) {
@@ -238,7 +238,7 @@ func Gets(ctx app.Context, useCache bool, keys []app.Key, dst []interface{}) (er
 		return
 	}
 	dr := app.AppDriver(ctx.AppUUID())
-	merr := make(zerror.Multi, len(keys))
+	merr := make(errorutil.Multi, len(keys))
 	//ensure all dst is set to something (non-nil)
 	var kKind, kShape string
 	for i := 0; i < len(dst); i++ {
@@ -260,7 +260,7 @@ func Gets(ctx app.Context, useCache bool, keys []app.Key, dst []interface{}) (er
 		ddst = make([]interface{}, 0, 4)
 		cresults, err2 := CacheGet(ctx, keys, dst)
 		logging.Trace(ctx, "CacheGet: keys: %v, dst: %v, result: %v, err: %v",
-			keys, util.ValuePrintfer{dst}, cresults, err2)
+			keys, printf.ValuePrintfer{dst}, cresults, err2)
 		//println("==============================")
 		//debug.PrintStack()
 		//if len(misses) == 0 && len(dst) == 1 {
@@ -292,9 +292,9 @@ func Gets(ctx app.Context, useCache bool, keys []app.Key, dst []interface{}) (er
 		dstpass := ddst
 		dkeyspass := dkeys
 		errds := dr.DatastoreGet(ctx, dkeys, ddst)
-		logging.Trace(ctx, "Error from DatastoreGet: %v, ddst: %v", errds, util.ValuePrintfer{ddst})
+		logging.Trace(ctx, "Error from DatastoreGet: %v, ddst: %v", errds, printf.ValuePrintfer{ddst})
 		if errds == nil {
-		} else if errs, ok := zerror.Base(errds).(zerror.Multi); ok {
+		} else if errs, ok := errorutil.Base(errds).(errorutil.Multi); ok {
 			// look for datastore misses
 			dstpass = make([]interface{}, 0, 4)
 			dkeyspass = make([]app.Key, 0, 4)
@@ -359,7 +359,7 @@ func Put(ctx app.Context, useCache bool, key app.Key, dst interface{}) error {
 }
 
 func Puts(ctx app.Context, useCache bool, keys []app.Key, dst []interface{}) (err error) {
-	defer zerror.OnErrorf(1, &err, nil)
+	defer errorutil.OnErrorf(1, &err, nil)
 	if err = PreSave(ctx, useCache, keys, dst); err != nil {
 		return
 	}
@@ -387,7 +387,7 @@ func Puts(ctx app.Context, useCache bool, keys []app.Key, dst []interface{}) (er
 		logging.Trace(ctx, "XXXXXXXXXX OrmFromIntf: d: %#v, map: %v", ddst[j], dmaps[j])
 	}
 	//logging.Trace(ctx, "PropertyList: %#v", dmaps)
-	logging.Trace(ctx, "PropertyList: %s", util.ValuePrintfer{dmaps})
+	logging.Trace(ctx, "PropertyList: %s", printf.ValuePrintfer{dmaps})
 
 	dkeys, err = dr.DatastorePut(ctx, dkeys, ddst, dmaps)
 	if err != nil {
@@ -400,7 +400,7 @@ func Puts(ctx app.Context, useCache bool, keys []app.Key, dst []interface{}) (er
 }
 
 func Deletes(ctx app.Context, useCache bool, keys ...app.Key) (err error) {
-	defer zerror.OnErrorf(1, &err, nil)
+	defer errorutil.OnErrorf(1, &err, nil)
 	dr := app.AppDriver(ctx.AppUUID())
 	if err = dr.DatastoreDelete(ctx, keys); err != nil {
 		return
@@ -411,7 +411,7 @@ func Deletes(ctx app.Context, useCache bool, keys ...app.Key) (err error) {
 
 func CachePut(ctx app.Context, keys []app.Key, dst []interface{}) (err error) {
 	//defer func() { if err != nil { logging.Error(ctx, "%v", err) } }()
-	defer zerror.OnErrorf(1, &err, nil)
+	defer errorutil.OnErrorf(1, &err, nil)
 	mcitems := make([]*safestore.Item, 0, 4)
 	//logging.Trace(nil, "CachePut: dst: %#v, tm: %#v", dst, tm)
 	dr := app.AppDriver(ctx.AppUUID())
@@ -420,7 +420,7 @@ func CachePut(ctx app.Context, keys []app.Key, dst []interface{}) (err error) {
 	var kKind, kShape string
 	for i := 0; i < len(dst); i++ {
 		logging.Trace(ctx, "CachePut: i: %v/%v, dst: %v, rt: %v",
-			i, len(dst), util.ValuePrintfer{dst[i]}, reflect.TypeOf(dst[i]))
+			i, len(dst), printf.ValuePrintfer{dst[i]}, reflect.TypeOf(dst[i]))
 		//this may be false (if a negative)
 		if kKind, kShape, _, err = dr.GetInfoFromKey(ctx, keys[i]); err != nil {
 			return
@@ -464,7 +464,7 @@ func CachePut(ctx app.Context, keys []app.Key, dst []interface{}) (err error) {
 
 // Does a CacheGet.
 func CacheGet(ctx app.Context, keys []app.Key, dst []interface{}) (result []CacheResult, err error) {
-	defer zerror.OnErrorf(1, &err, nil)
+	defer errorutil.OnErrorf(1, &err, nil)
 	logging.Trace(ctx, "Start of CacheGet")
 	//logging.Trace(nil, "CacheGet called")
 	if len(keys) == 0 || len(keys) != len(dst) {
@@ -564,7 +564,7 @@ func CacheGet(ctx app.Context, keys []app.Key, dst []interface{}) (result []Cach
 }
 
 func CacheDelete(ctx app.Context, keys ...app.Key) (err error) {
-	defer zerror.OnErrorf(1, &err, nil)
+	defer errorutil.OnErrorf(1, &err, nil)
 	dr := app.AppDriver(ctx.AppUUID())
 	sf := ctx.Store()
 	mcs0 := make([]interface{}, 0, 4)
@@ -585,7 +585,7 @@ func CacheDelete(ctx app.Context, keys ...app.Key) (err error) {
 
 //Populate a struct from a datastore key
 func FromDatastoreKey(ctx app.Context, d interface{}, key app.Key) (d2 interface{}, err error) {
-	defer zerror.OnErrorf(1, &err, nil)
+	defer errorutil.OnErrorf(1, &err, nil)
 	var tm *TypeMeta
 	var s reflect.Value
 	dr := app.AppDriver(ctx.AppUUID())
@@ -654,7 +654,7 @@ func DatastoreKey(ctx app.Context, d interface{}) (k app.Key, err error) {
 	// defer func() {
 	// 	logging.Error(nil, ">>>>> last %v %T\n%s\n", err, err, util.Stack(nil, false))
 	// }()
-	defer zerror.OnErrorf(1, &err, nil)
+	defer errorutil.OnErrorf(1, &err, nil)
 	// defer func() {
 	// 	logging.Error(nil, ">>>>> before last %v %T\n%s\n", err, err, util.Stack(nil, false))
 	// }()
@@ -690,7 +690,7 @@ func DatastoreKey(ctx app.Context, d interface{}) (k app.Key, err error) {
 func dskey(ctx app.Context, s reflect.Value,
 	keyfield string, shapefield string, kind string, shape string, pkey app.Key,
 ) (k app.Key, err error) {
-	defer zerror.OnErrorf(1, &err, nil)
+	defer errorutil.OnErrorf(1, &err, nil)
 	dr := app.AppDriver(ctx.AppUUID())
 	intId := s.FieldByName(keyfield).Int()
 	if shape != "" && shapefield != "" {
@@ -709,7 +709,7 @@ func dskey(ctx app.Context, s reflect.Value,
 }
 
 func fromDskey(ctx app.Context, s reflect.Value, field string, shape string, key app.Key) (err error) {
-	defer zerror.OnErrorf(1, &err, nil)
+	defer errorutil.OnErrorf(1, &err, nil)
 	f := s.FieldByName(field)
 	if !f.IsValid() {
 		return fmt.Errorf("No Field Named: %v found in %v", field, s.Interface())
@@ -728,7 +728,7 @@ func fromDskey(ctx app.Context, s reflect.Value, field string, shape string, key
 //Decode a cache entry. It knows that Negatives are recorded as 'false',
 //supports doing a quick check for false.
 func CacheEntryDecode(bs []byte, v interface{}) (v2 interface{}, err error) {
-	defer zerror.OnErrorf(1, &err, nil)
+	defer errorutil.OnErrorf(1, &err, nil)
 	if len(bs) == 0 {
 		return
 	}
@@ -755,7 +755,7 @@ func CacheEntryDecode(bs []byte, v interface{}) (v2 interface{}, err error) {
 func QuerySupport(ctx app.Context, qString string, kind string,
 	shape string, nextFn func() (k app.Key, cursor string, err error),
 ) (res []app.Key, lastqcur string, err error) {
-	defer zerror.OnErrorf(1, &err, nil)
+	defer errorutil.OnErrorf(1, &err, nil)
 	//var obj interface{}
 	tm := GetLoadedStructMetaFromKind(kind, shape)
 	if tm == nil {
@@ -802,7 +802,7 @@ func QuerySupport(ctx app.Context, qString string, kind string,
 	for {
 		//logging.Trace(nil, "GAE DRIVER: %#v", obj)
 		key, lastqcur, err = nextFn()
-		if zerror.Base(err) == io.EOF {
+		if errorutil.Base(err) == io.EOF {
 			err = nil
 			break
 		}
@@ -866,7 +866,7 @@ func QueryAsString(parentKey app.Key, kind string, opts *app.QueryOpts, filters 
 //Note: When loading, do not use variadic, since the returned values may not be
 //what is sent variadic'ally.
 func Load(ctx app.Context, useCache bool, entities []interface{}) (err error) {
-	defer zerror.OnErrorf(1, &err, nil)
+	defer errorutil.OnErrorf(1, &err, nil)
 	//logging.DebugStack(ctx, "")
 	dr := app.AppDriver(ctx.AppUUID())
 	useCache = dr.UseCache(ctx, useCache)
@@ -883,7 +883,7 @@ func Load(ctx app.Context, useCache bool, entities []interface{}) (err error) {
 		keys = append(keys, key)
 	}
 	logging.Trace(ctx, "db.Load: %v/%v entities: %v, keys: %v", len(entities), len(keys),
-		util.ValuePrintfer{entities}, util.ValuePrintfer{keys})
+		printf.ValuePrintfer{entities}, printf.ValuePrintfer{keys})
 	//debug.PrintStack()
 	//Call Get on them
 	if err = Gets(ctx, useCache, keys, entities); err != nil {
@@ -893,7 +893,7 @@ func Load(ctx app.Context, useCache bool, entities []interface{}) (err error) {
 }
 
 func Save(ctx app.Context, entities ...interface{}) (err error) {
-	defer zerror.OnErrorf(1, &err, nil)
+	defer errorutil.OnErrorf(1, &err, nil)
 	//Create a corresponding slice of Keys
 	//Call Save
 	dr := app.AppDriver(ctx.AppUUID())
@@ -910,11 +910,11 @@ func Save(ctx app.Context, entities ...interface{}) (err error) {
 }
 
 func LoadOne(ctx app.Context, useCache bool, maybeCreate bool, entity interface{}) (err error) {
-	defer zerror.OnErrorf(1, &err, nil)
+	defer errorutil.OnErrorf(1, &err, nil)
 	dsts := []interface{}{entity}
 	err = Load(ctx, maybeCreate, dsts)
 	// TODO: verify that removing MultiFirst call here works
-	// if maybeCreate && zerror.IsNotFound(zerror.MultiFirst(err)) {
+	// if maybeCreate && errorutil.IsNotFound(errorutil.MultiFirst(err)) {
 	if maybeCreate && IsNotFoundError(err) {
 		err = Save(ctx, entity)
 	}
@@ -922,7 +922,7 @@ func LoadOne(ctx app.Context, useCache bool, maybeCreate bool, entity interface{
 }
 
 func EntitiesForKeys(ctx app.Context, keys []app.Key, load bool, useCache bool) (res []interface{}, err error) {
-	defer zerror.OnErrorf(1, &err, nil)
+	defer errorutil.OnErrorf(1, &err, nil)
 	res = make([]interface{}, len(keys))
 	for i := 0; i < len(keys); i++ {
 		if res[i], err = FromDatastoreKey(ctx, nil, keys[i]); err != nil {
@@ -936,7 +936,7 @@ func EntitiesForKeys(ctx app.Context, keys []app.Key, load bool, useCache bool) 
 }
 
 func EntityForKey(ctx app.Context, key app.Key, load bool, useCache bool) (res interface{}, err error) {
-	defer zerror.OnErrorf(1, &err, nil)
+	defer errorutil.OnErrorf(1, &err, nil)
 	if res, err = FromDatastoreKey(ctx, nil, key); err != nil {
 		return
 	}
@@ -955,7 +955,7 @@ func IsNotFoundError(err error) (b bool) {
 	switch tt2 := err.(type) {
 	case EntityNotFoundError:
 		b = true
-	case zerror.Multi:
+	case errorutil.Multi:
 		if len(tt2) == 0 {
 			break
 		}

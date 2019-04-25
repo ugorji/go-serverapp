@@ -11,7 +11,7 @@ go get github.com/ugorji/go-serverapp/app
 # Package Documentation
 
 
-This package contains features that apply across the app.
+Package app provides shared foundation for server based applications.
 
 
 ## CONTEXT

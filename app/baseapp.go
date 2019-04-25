@@ -49,14 +49,14 @@ import (
 
 	//"text/template"
 	"github.com/ugorji/go-common/logging"
+	"github.com/ugorji/go-common/runtimeutil"
 	"github.com/ugorji/go-common/safestore"
-	"github.com/ugorji/go-common/util"
 	"github.com/ugorji/go-serverapp/web"
 
 	// "crypto/rand"
 	// "math/big"
+	"github.com/ugorji/go-common/errorutil"
 	"github.com/ugorji/go-common/vfs"
-	"github.com/ugorji/go-common/zerror"
 )
 
 const (
@@ -117,7 +117,7 @@ type myResponseError struct {
 }
 
 func NewApp(devServer bool, uuid string, viewsCfgPath string, lld LowLevelDriver) (gapp *BaseApp, err error) {
-	defer zerror.OnErrorf(1, &err, nil)
+	defer errorutil.OnErrorf(1, &err, nil)
 	type tlld struct {
 		*BaseDriver
 		LowLevelDriver
@@ -209,7 +209,7 @@ func (gapp *BaseDriver) Info() *AppInfo {
 //Note: All added keys start with Z.
 //(so application code should not add keys which start with Z).
 func (gapp *BaseDriver) Render(ctx Context, view string, data map[string]interface{}, wr io.Writer) (err error) {
-	defer zerror.OnErrorf(1, &err, nil)
+	defer errorutil.OnErrorf(1, &err, nil)
 	v, ok := gapp.Views.Views[view]
 	if !ok {
 		//emsg := fmt.Sprintf("No View found for: %s", view)
@@ -239,7 +239,7 @@ func (gapp *BaseDriver) Render(ctx Context, view string, data map[string]interfa
 }
 
 func (gapp *BaseDriver) LandingPageURL(ctx Context, includeHost bool) (s string, err error) {
-	defer zerror.OnErrorf(1, &err, nil)
+	defer errorutil.OnErrorf(1, &err, nil)
 	u, err := gapp.Root.FindByName("landing").ToURL()
 	if err != nil {
 		return
@@ -321,7 +321,7 @@ func (h HTTPHandler) ServeHTTP(w0 http.ResponseWriter, r *http.Request) {
 					// only log information the first time when onceInitErr is set
 					if gapp.onceInitErr != nil {
 						if gapp.Tier == DEVELOPMENT {
-							logging.Severe(c, "Initialization Error: %v\n%s", gapp.onceInitErr, util.Stack(nil, false))
+							logging.Severe(c, "Initialization Error: %v\n%s", gapp.onceInitErr, runtimeutil.Stack(nil, false))
 							//debug.PrintStack()
 							if gapp.DumpRequestOnError {
 								DumpRequest(c, r)
@@ -402,7 +402,7 @@ func (gapp *BaseApp) derr(
 ) {
 	if gapp.Tier == DEVELOPMENT {
 		//debug.PrintStack()
-		logging.Error(c, "Error handling request: %v\nStackTrace ... \n%s", err, util.Stack(nil, false))
+		logging.Error(c, "Error handling request: %v\nStackTrace ... \n%s", err, runtimeutil.Stack(nil, false))
 		if gapp.DumpRequestOnError {
 			DumpRequest(c, r)
 		}
@@ -490,5 +490,5 @@ func DumpRequest(c Context, r *http.Request) (err error) {
 }
 
 // func runtimeStack() (v []byte) {
-// 	return util.Stack(nil, false)
+// 	return runtimeutil.Stack(nil, false)
 // }

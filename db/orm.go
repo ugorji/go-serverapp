@@ -7,7 +7,7 @@ import (
 
 	"github.com/ugorji/go-common/logging"
 	"github.com/ugorji/go-common/tree"
-	"github.com/ugorji/go-common/zerror"
+	"github.com/ugorji/go-common/errorutil"
 )
 
 //Hack: Holds a mapping of basic types (and their kinds) to slices of them,
@@ -62,7 +62,7 @@ func HackRegisterSliceType(slcs ...interface{}) error {
 
 //Populate from a struct
 func OrmFromIntf(d interface{}, m *PropertyList, indexesOnly bool) (err error) {
-	defer zerror.OnErrorf(1, &err, nil)
+	defer errorutil.OnErrorf(1, &err, nil)
 	tm, err := GetStructMeta(d)
 	if err != nil {
 		return err
@@ -119,7 +119,7 @@ func OrmFromIntf(d interface{}, m *PropertyList, indexesOnly bool) (err error) {
 
 //Populate to a struct
 func OrmToIntf(m *PropertyList, d interface{}) (err error) {
-	defer zerror.OnErrorf(1, &err, nil)
+	defer errorutil.OnErrorf(1, &err, nil)
 	tm, err := GetStructMeta(d)
 	if err != nil {
 		return

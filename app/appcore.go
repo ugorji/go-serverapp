@@ -1,6 +1,4 @@
 /*
-This package contains features that apply across the app.
-
 CONTEXT
 
 We do not depend on information stored per request. Instead, we pass all the information
@@ -45,6 +43,7 @@ import (
 	"strconv"
 	"sync"
 	"time"
+
 	"github.com/ugorji/go-common/safestore"
 	"github.com/ugorji/go-common/vfs"
 )
@@ -86,7 +85,6 @@ type Context interface {
 	AppUUID() string
 }
 
-
 // var (
 // 	ErrEntityNotFoundMsg = "<App_Entity_Not_Found>"
 // 	//Error returned by Load calls where no entity is found
@@ -99,7 +97,7 @@ const (
 	DEVELOPMENT Tier = iota + 1
 	STAGING
 	PRODUCTION
-) 
+)
 
 type QueryFilterOp int
 

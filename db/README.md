@@ -11,7 +11,7 @@ go get github.com/ugorji/go-serverapp/db
 # Package Documentation
 
 
-This package manages db interactions.
+Package db manages db interactions for server applications.
 
 
 ## DATASTORE

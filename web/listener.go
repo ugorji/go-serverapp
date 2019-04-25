@@ -8,7 +8,7 @@ import (
 	"sync/atomic"
 
 	"github.com/ugorji/go-common/logging"
-	"github.com/ugorji/go-common/util"
+	"github.com/ugorji/go-common/runtimeutil"
 )
 
 type OnPanicFlags uint8
@@ -112,7 +112,7 @@ func (s *Listener) handlePanic() {
 			}
 		}
 		if s.panicFlags&OnPanicLogStack != 0 {
-			logging.Debug(nil, "Stack from Panic Recovered during ServeHTTP: \n%s", util.Stack(nil, false))
+			logging.Debug(nil, "Stack from Panic Recovered during ServeHTTP: \n%s", runtimeutil.Stack(nil, false))
 		}
 	}
 }

@@ -5,7 +5,7 @@ import (
 	"encoding/json"
 	"time"
 	"strings"
-	"github.com/ugorji/go-common/zerror"
+	"github.com/ugorji/go-common/errorutil"
 	"net/http"
 )
 
@@ -47,7 +47,7 @@ func NewCookie(host, name, value string, ttlsec int, encode bool) *http.Cookie {
 func AddHandlerMessages(r *http.Request, w http.ResponseWriter,
 	ckName string, messages ...HandlerMessage,
 ) (err error) {
-	defer zerror.OnErrorf(1, &err, nil)
+	defer errorutil.OnErrorf(1, &err, nil)
 	// find the cookie
 	// if not there, add cookie
 	// if there before, update cookie that was set

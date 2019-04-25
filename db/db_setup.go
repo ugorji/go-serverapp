@@ -11,7 +11,7 @@ import (
 
 	//"runtime/debug"
 	"github.com/ugorji/go-common/safestore"
-	"github.com/ugorji/go-common/zerror"
+	"github.com/ugorji/go-common/errorutil"
 )
 
 const (
@@ -87,7 +87,7 @@ func GetStructMeta(s interface{}) (tm *TypeMeta, err error) {
 }
 
 func GetStructMetaFromType(rt reflect.Type) (tm *TypeMeta, err error) {
-	defer zerror.OnErrorf(1, &err, nil)
+	defer errorutil.OnErrorf(1, &err, nil)
 	//logging.RawOut(" --------------- STANDARD OUT --------------- \n")
 	rt00 := rt
 	if rt.Kind() == reflect.Ptr {

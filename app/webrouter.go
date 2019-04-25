@@ -57,9 +57,9 @@ import (
 	"net/url"
 
 	"github.com/ugorji/go-common/logging"
+	"github.com/ugorji/go-common/regexputil"
 	"github.com/ugorji/go-common/safestore"
-	"github.com/ugorji/go-common/util"
-	"github.com/ugorji/go-common/zerror"
+	"github.com/ugorji/go-common/errorutil"
 )
 
 const (
@@ -178,7 +178,7 @@ func (rt *Route) Match(store safestore.I, req *http.Request) *Route {
 
 //Sister function to ToURL.
 func (rt *Route) ToURLX(params map[string]interface{}) (u *url.URL, err error) {
-	defer zerror.OnErrorf(1, &err, nil)
+	defer errorutil.OnErrorf(1, &err, nil)
 	//populate Scheme, Path, Host, RawUserinfo, RawQuery and call String() method
 	u = new(url.URL)
 	for rt2 := rt; rt2 != nil; rt2 = rt2.Parent {
@@ -213,20 +213,20 @@ func (rt *Route) ToURLX(params map[string]interface{}) (u *url.URL, err error) {
 	}
 	//do substitution on Path and Host if necessary
 	//for i := 0; i < len(params);  { // where params is a []string
-	//	u.Path = strings.Replace(u.Path, util.InterpolatePrefix + params[i] + util.InterpolatePostfix, params[i+1], -1)
-	//	u.Host = strings.Replace(u.Host, util.InterpolatePrefix + params[i] + util.InterpolatePostfix, params[i+1], -1)
+	//	u.Path = strings.Replace(u.Path, regexputil.InterpolatePrefix + params[i] + regexputil.InterpolatePostfix, params[i+1], -1)
+	//	u.Host = strings.Replace(u.Host, regexputil.InterpolatePrefix + params[i] + regexputil.InterpolatePostfix, params[i+1], -1)
 	//	i += 2
 	//}
-	u.Path = util.Interpolate(u.Path, params)
-	u.Host = util.Interpolate(u.Host, params)
+	u.Path = regexputil.Interpolate(u.Path, params)
+	u.Host = regexputil.Interpolate(u.Host, params)
 	if u.RawQuery != "" {
-		u.RawQuery = util.Interpolate(u.RawQuery, params)
+		u.RawQuery = regexputil.Interpolate(u.RawQuery, params)
 	}
 	return
 }
 
 func (rt *Route) ToURL(params ...string) (u *url.URL, err error) {
-	defer zerror.OnErrorf(1, &err, nil)
+	defer errorutil.OnErrorf(1, &err, nil)
 	m := make(map[string]interface{})
 	for i := 0; i < len(params); {
 		m[params[i]] = params[i+1]
@@ -238,7 +238,7 @@ func (rt *Route) ToURL(params ...string) (u *url.URL, err error) {
 // This adds a Host matchExpr to this router.
 func (rt *Route) Host(hostRegexp string) *Route {
 	logging.Trace(nil, "Adding Host Match: %v to Route: %v", hostRegexp, rt.Name)
-	re, sclean, keys, _ := util.ParseRegexTemplate(hostRegexp)
+	re, sclean, keys, _ := regexputil.ParseRegexTemplate(hostRegexp)
 	rt.url.Host = sclean
 	x := func(store safestore.I, req *http.Request) (bool, error) {
 		if res := re.FindStringSubmatch(req.URL.Host); res != nil {
@@ -255,7 +255,7 @@ func (rt *Route) Host(hostRegexp string) *Route {
 // as well as matches of regexp.
 func (rt *Route) Path(pathRegexp string) *Route {
 	logging.Trace(nil, "Adding Path Match: %v to Route: %v", pathRegexp, rt.Name)
-	re, sclean, keys, err := util.ParseRegexTemplate(pathRegexp)
+	re, sclean, keys, err := regexputil.ParseRegexTemplate(pathRegexp)
 	if err != nil {
 		panic(err)
 	}
