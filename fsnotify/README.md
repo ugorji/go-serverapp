@@ -11,5 +11,5 @@ go get github.com/ugorji/go-serverapp/fsnotify
 # Package Documentation
 
 
-## Package fsnotify provides filesystem listening and notification support
+Package fsnotify provides filesystem listening and notification support.
 
