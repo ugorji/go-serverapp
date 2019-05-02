@@ -47,7 +47,7 @@ func NewCookie(host, name, value string, ttlsec int, encode bool) *http.Cookie {
 func AddHandlerMessages(r *http.Request, w http.ResponseWriter,
 	ckName string, messages ...HandlerMessage,
 ) (err error) {
-	defer errorutil.OnErrorf(1, &err, nil)
+	defer errorutil.OnError(&err)
 	// find the cookie
 	// if not there, add cookie
 	// if there before, update cookie that was set

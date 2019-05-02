@@ -87,7 +87,7 @@ func GetStructMeta(s interface{}) (tm *TypeMeta, err error) {
 }
 
 func GetStructMetaFromType(rt reflect.Type) (tm *TypeMeta, err error) {
-	defer errorutil.OnErrorf(1, &err, nil)
+	defer errorutil.OnError(&err)
 	//logging.RawOut(" --------------- STANDARD OUT --------------- \n")
 	rt00 := rt
 	if rt.Kind() == reflect.Ptr {

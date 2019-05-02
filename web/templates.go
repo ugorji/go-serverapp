@@ -79,7 +79,7 @@ func NewViews() *Views {
 // all the templates matching that regexp, and parse them.
 // (We need to add funcMap so that we can parse/find functions defined at parse time, etc).
 func (views *Views) AddTemplates(vfs *vfs.Vfs, r *regexp.Regexp) (err error) {
-	defer errorutil.OnErrorf(1, &err, nil)
+	defer errorutil.OnError(&err)
 	errm := make(errorutil.Multi, 0, 4)
 	ls := vfs.Matches(r)
 	logging.Trace(nil, "LT: Matches: %v", ls)
@@ -113,7 +113,7 @@ func (views *Views) AddTemplates(vfs *vfs.Vfs, r *regexp.Regexp) (err error) {
 // This is called after templates have been found. Using the map, it will
 // create TemplateSets for each view (sharing templates performantly)
 func (views *Views) Load(vcn *ViewConfigNode) (err error) {
-	defer errorutil.OnErrorf(1, &err, nil)
+	defer errorutil.OnError(&err)
 	vcfg := vcn.nodeToMap()
 	errm := make(errorutil.Multi, 0, 4)
 	for k, v := range vcfg {

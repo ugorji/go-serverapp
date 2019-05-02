@@ -178,7 +178,7 @@ func (rt *Route) Match(store safestore.I, req *http.Request) *Route {
 
 //Sister function to ToURL.
 func (rt *Route) ToURLX(params map[string]interface{}) (u *url.URL, err error) {
-	defer errorutil.OnErrorf(1, &err, nil)
+	defer errorutil.OnError(&err)
 	//populate Scheme, Path, Host, RawUserinfo, RawQuery and call String() method
 	u = new(url.URL)
 	for rt2 := rt; rt2 != nil; rt2 = rt2.Parent {
@@ -226,7 +226,7 @@ func (rt *Route) ToURLX(params map[string]interface{}) (u *url.URL, err error) {
 }
 
 func (rt *Route) ToURL(params ...string) (u *url.URL, err error) {
-	defer errorutil.OnErrorf(1, &err, nil)
+	defer errorutil.OnError(&err)
 	m := make(map[string]interface{})
 	for i := 0; i < len(params); {
 		m[params[i]] = params[i+1]

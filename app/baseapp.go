@@ -117,7 +117,7 @@ type myResponseError struct {
 }
 
 func NewApp(devServer bool, uuid string, viewsCfgPath string, lld LowLevelDriver) (gapp *BaseApp, err error) {
-	defer errorutil.OnErrorf(1, &err, nil)
+	defer errorutil.OnError(&err)
 	type tlld struct {
 		*BaseDriver
 		LowLevelDriver
@@ -209,7 +209,7 @@ func (gapp *BaseDriver) Info() *AppInfo {
 //Note: All added keys start with Z.
 //(so application code should not add keys which start with Z).
 func (gapp *BaseDriver) Render(ctx Context, view string, data map[string]interface{}, wr io.Writer) (err error) {
-	defer errorutil.OnErrorf(1, &err, nil)
+	defer errorutil.OnError(&err)
 	v, ok := gapp.Views.Views[view]
 	if !ok {
 		//emsg := fmt.Sprintf("No View found for: %s", view)
@@ -239,7 +239,7 @@ func (gapp *BaseDriver) Render(ctx Context, view string, data map[string]interfa
 }
 
 func (gapp *BaseDriver) LandingPageURL(ctx Context, includeHost bool) (s string, err error) {
-	defer errorutil.OnErrorf(1, &err, nil)
+	defer errorutil.OnError(&err)
 	u, err := gapp.Root.FindByName("landing").ToURL()
 	if err != nil {
 		return

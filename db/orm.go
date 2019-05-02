@@ -62,7 +62,7 @@ func HackRegisterSliceType(slcs ...interface{}) error {
 
 //Populate from a struct
 func OrmFromIntf(d interface{}, m *PropertyList, indexesOnly bool) (err error) {
-	defer errorutil.OnErrorf(1, &err, nil)
+	defer errorutil.OnError(&err)
 	tm, err := GetStructMeta(d)
 	if err != nil {
 		return err
@@ -119,7 +119,7 @@ func OrmFromIntf(d interface{}, m *PropertyList, indexesOnly bool) (err error) {
 
 //Populate to a struct
 func OrmToIntf(m *PropertyList, d interface{}) (err error) {
-	defer errorutil.OnErrorf(1, &err, nil)
+	defer errorutil.OnError(&err)
 	tm, err := GetStructMeta(d)
 	if err != nil {
 		return
