@@ -157,6 +157,7 @@ An application using the router will have pseudo-code like:
 ```go
 const VarsKey = "router_vars" ...
 const UseJsonOnErrHttpHeaderKey = "Z-App-Json-Response-On-Error"
+func CtxCtx(c Context) context.Context
 func Dispatch(ctx Context, root *Route, w http.ResponseWriter, r *http.Request) error
 func DumpRequest(c Context, r *http.Request) (err error)
 func NoMatchFoundHandler(c Context, w http.ResponseWriter, r *http.Request) error

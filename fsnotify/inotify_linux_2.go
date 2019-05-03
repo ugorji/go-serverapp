@@ -47,6 +47,8 @@ import (
 	"github.com/ugorji/go-common/logging"
 )
 
+var log = logging.PkgLogger()
+
 var ClosedErr = errorutil.String("<watcher closed>")
 
 // Use select, so read doesn't block
@@ -150,7 +152,7 @@ func (w *Watcher) AddAll(ignoreErr, clear, recursive bool, flags uint32, fpaths 
 	var merr errorutil.Multi
 	fnErr := func(err error, message string, params ...interface{}) bool {
 		if ignoreErr {
-			logging.Error2(nil, err, message, params...)
+			log.Error2(nil, err, message, params...)
 			return false
 		} else {
 			errorutil.OnErrorf(&err, message, params...)
@@ -272,7 +274,7 @@ func (w *Watcher) Close() (err error) {
 	w.clear()
 	close(w.ev)
 	if !(useSelect || useNonBlock) {
-		logging.Error2(nil, syscall.Close(w.fd), "Error closing Watcher")
+		log.Error2(nil, syscall.Close(w.fd), "Error closing Watcher")
 	}
 	return nil
 }
@@ -280,7 +282,7 @@ func (w *Watcher) Close() (err error) {
 func (w *Watcher) readEvents() {
 	if useSelect || useNonBlock {
 		defer func() {
-			logging.Error2(nil, syscall.Close(w.fd), "Error closing Watcher")
+			log.Error2(nil, syscall.Close(w.fd), "Error closing Watcher")
 		}()
 	}
 
@@ -314,7 +316,7 @@ func (w *Watcher) readEvents() {
 			num, err := syscall.Select(w.fd+1, fdset, nil, nil, &selTimeout)
 			// if err != nil || num == 0 {
 			if (fdset.Bits[w.fd/64] & (1 << (uint(w.fd) % 64))) == 0 { // FD_ISSET
-				logging.Error2(nil, err, "Error during Watcher select, which returned: %d", num)
+				log.Error2(nil, err, "Error during Watcher select, which returned: %d", num)
 				continue
 			}
 			// println(">>>>> select: will read")
@@ -328,7 +330,7 @@ func (w *Watcher) readEvents() {
 			continue
 		}
 		// even if there is an error, see if any events already read and process them.
-		logging.Error2(nil, err, "Error during Watcher read, which returned %d bytes", n)
+		log.Error2(nil, err, "Error during Watcher read, which returned %d bytes", n)
 		if n == 0 {
 			break // EOF
 		}

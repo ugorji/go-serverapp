@@ -7,7 +7,6 @@ import (
 	"sync"
 	"sync/atomic"
 
-	"github.com/ugorji/go-common/logging"
 	"github.com/ugorji/go-common/runtimeutil"
 )
 
@@ -106,13 +105,13 @@ func (s *Listener) handlePanic() {
 		if s.panicFlags&OnPanicLog != 0 {
 			switch v := x.(type) {
 			case error:
-				logging.Error2(nil, v, "Panic Recovered during ServeHTTP")
+				log.Error2(nil, v, "Panic Recovered during ServeHTTP")
 			default:
-				logging.Error(nil, "Panic Recovered during ServeHTTP: %v", x)
+				log.Error(nil, "Panic Recovered during ServeHTTP: %v", x)
 			}
 		}
 		if s.panicFlags&OnPanicLogStack != 0 {
-			logging.Debug(nil, "Stack from Panic Recovered during ServeHTTP: \n%s", runtimeutil.Stack(nil, false))
+			log.Debug(nil, "Stack from Panic Recovered during ServeHTTP: \n%s", runtimeutil.Stack(nil, false))
 		}
 	}
 }
@@ -136,7 +135,7 @@ func (s *Listener) Run(onClosed, onPaused, onRun func()) {
 		onPaused()
 	} else if nHi := atomic.LoadInt32(&s.maxNumConnHi); n >= nHi {
 		if atomic.CompareAndSwapUint32(&s.paused, 0, 1) {
-			logging.Warning(nil, "PAUSE: Reached max num connections threshold (%d): %d", nHi, n)
+			log.Warning(nil, "PAUSE: Reached max num connections threshold (%d): %d", nHi, n)
 		}
 	}
 
@@ -162,7 +161,7 @@ func (s *Listener) afterRun() {
 	}
 	if nLo := atomic.LoadInt32(&s.maxNumConnLo); n <= nLo { //handle when Lo=0 (e.g. if Hi=1)
 		if atomic.CompareAndSwapUint32(&s.paused, 1, 0) {
-			logging.Warning(nil, "UNPAUSE. Below max num connections threshold (%d): %d", nLo, n)
+			log.Warning(nil, "UNPAUSE. Below max num connections threshold (%d): %d", nLo, n)
 			signalCond(s.pausedCond)
 		}
 		if n == 0 {
@@ -240,7 +239,7 @@ func closeFile(w *os.File, name string) {
 	if w == nil {
 		return
 	}
-	logging.Error2(nil, w.Close(), "Error closing file: %s", name)
+	log.Error2(nil, w.Close(), "Error closing file: %s", name)
 }
 
 func signalCond(c *sync.Cond) {
@@ -263,6 +262,6 @@ func waitCond(c *sync.Cond, unlock bool, fn func() bool) {
 // Don't use Helper function for logging, else wrong file/line info is in log file
 // func logErr(err error, message string, params ...interface{}) {
 // 	if err != nil {
-// 		logging.Error2(nil, err, message, params...)
+// 		log.Error2(nil, err, message, params...)
 // 	}
 // }

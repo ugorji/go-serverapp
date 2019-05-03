@@ -9,8 +9,6 @@ import (
 	"sync"
 	"sync/atomic"
 	"time"
-
-	"github.com/ugorji/go-common/logging"
 )
 
 // AccessLogger handles access logging, including opening/closing
@@ -69,7 +67,7 @@ func (s *AccessLogger) flush() {
 	if s.bufw == nil || s.file == nil {
 		return
 	}
-	logging.Error2(nil, s.bufw.Flush(), "Error flushing access log file to disk")
+	log.Error2(nil, s.bufw.Flush(), "Error flushing access log file to disk")
 }
 
 func (s *AccessLogger) Close() (err error) {
@@ -116,7 +114,7 @@ func (s *AccessLogger) ServeHttpPipe(w ResponseWriter, r *http.Request, f *Pipel
 		r.Referer(),
 		r.UserAgent(),
 	)
-	logging.Error2(nil, err, "Error logging access")
+	log.Error2(nil, err, "Error logging access")
 	return
 
 }

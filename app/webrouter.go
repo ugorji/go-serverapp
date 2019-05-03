@@ -56,10 +56,9 @@ import (
 	"net/http"
 	"net/url"
 
-	"github.com/ugorji/go-common/logging"
+	"github.com/ugorji/go-common/errorutil"
 	"github.com/ugorji/go-common/regexputil"
 	"github.com/ugorji/go-common/safestore"
-	"github.com/ugorji/go-common/errorutil"
 )
 
 const (
@@ -94,7 +93,7 @@ type Route struct {
 // Any wrapping function can call Dispatch, and overwrite TopLevelHandler
 func Dispatch(ctx Context, root *Route, w http.ResponseWriter, r *http.Request) error {
 	rt := root.Match(ctx.Store(), r)
-	logging.Trace(ctx, "rt: %v", rt.Name)
+	log.Debug(ctxctx(ctx), "rt: %v", rt.Name)
 	return rt.Handler.HandleHttp(ctx, w, r)
 }
 
@@ -124,11 +123,11 @@ func NewRoute(parent *Route, name string, handler Handler) *Route {
 		url:      new(url.URL),
 	}
 	if parent != nil {
-		logging.Trace(nil, "Created Route: %v with parent: %v", name, parent.Name)
+		log.Debug(nil, "Created Route: %v with parent: %v", name, parent.Name)
 		r.Parent = parent
 		parent.Children = append(parent.Children, r)
 	} else {
-		logging.Trace(nil, "Created Route: %v", name)
+		log.Debug(nil, "Created Route: %v", name)
 	}
 	return r
 }
@@ -237,7 +236,7 @@ func (rt *Route) ToURL(params ...string) (u *url.URL, err error) {
 
 // This adds a Host matchExpr to this router.
 func (rt *Route) Host(hostRegexp string) *Route {
-	logging.Trace(nil, "Adding Host Match: %v to Route: %v", hostRegexp, rt.Name)
+	log.Debug(nil, "Adding Host Match: %v to Route: %v", hostRegexp, rt.Name)
 	re, sclean, keys, _ := regexputil.ParseRegexTemplate(hostRegexp)
 	rt.url.Host = sclean
 	x := func(store safestore.I, req *http.Request) (bool, error) {
@@ -254,14 +253,14 @@ func (rt *Route) Host(hostRegexp string) *Route {
 // This adds a Path matchExpr to this router. It supports exact matches,
 // as well as matches of regexp.
 func (rt *Route) Path(pathRegexp string) *Route {
-	logging.Trace(nil, "Adding Path Match: %v to Route: %v", pathRegexp, rt.Name)
+	log.Debug(nil, "Adding Path Match: %v to Route: %v", pathRegexp, rt.Name)
 	re, sclean, keys, err := regexputil.ParseRegexTemplate(pathRegexp)
 	if err != nil {
 		panic(err)
 	}
 	rt.url.Path = sclean
 	x := func(store safestore.I, req *http.Request) (bool, error) {
-		// logging.Trace(nil, "req.URL.Path: (against route: %v): %v", rt.Name, req.URL.Path)
+		// log.Debug(nil, "req.URL.Path: (against route: %v): %v", rt.Name, req.URL.Path)
 		if len(keys) == 0 { // exact match
 			if sclean == req.URL.Path {
 				return true, nil
@@ -279,7 +278,7 @@ func (rt *Route) Path(pathRegexp string) *Route {
 }
 
 func (rt *Route) Param(param string) *Route {
-	logging.Trace(nil, "Adding Param Match: %v to Route: %v", param, rt.Name)
+	log.Debug(nil, "Adding Param Match: %v to Route: %v", param, rt.Name)
 	x := func(store safestore.I, req *http.Request) (bool, error) {
 		_ = req.FormValue("")
 		_, ok := req.Form[param]

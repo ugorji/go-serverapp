@@ -5,7 +5,7 @@ Templates support optimized management of templates for the whole application.
 
 The model is as below:
   - Each view page (e.g. landing page) corresponds to a given Template (set)
-  - A config file defines the templates, so we can re-use templates 
+  - A config file defines the templates, so we can re-use templates
   - A Tree is used, so that a TemplateSet can be easily configured to share templates. E.g.
     All the core templates share the same header and footers.
 
@@ -43,9 +43,9 @@ import (
 	"io/ioutil"
 	"regexp"
 	"strings"
-	"github.com/ugorji/go-common/logging"
-	"github.com/ugorji/go-common/vfs"
+
 	"github.com/ugorji/go-common/errorutil"
+	"github.com/ugorji/go-common/vfs"
 )
 
 // Manage all the template sets for the application.
@@ -82,7 +82,7 @@ func (views *Views) AddTemplates(vfs *vfs.Vfs, r *regexp.Regexp) (err error) {
 	defer errorutil.OnError(&err)
 	errm := make(errorutil.Multi, 0, 4)
 	ls := vfs.Matches(r)
-	logging.Trace(nil, "LT: Matches: %v", ls)
+	log.Debug(nil, "LT: Matches: %v", ls)
 	for _, s := range ls {
 		rc, _, err := vfs.Find(s)
 		if err != nil {
@@ -95,7 +95,7 @@ func (views *Views) AddTemplates(vfs *vfs.Vfs, r *regexp.Regexp) (err error) {
 			errm = append(errm, err)
 			continue
 		}
-		//logging.Debug(nil, "LT: Loading template: %v, from: %v", s, tmplstrs[s])
+		//log.Debug(nil, "LT: Loading template: %v, from: %v", s, tmplstrs[s])
 		t, err := template.New(s).Funcs(views.FnMap).Parse(string(bs))
 		if err != nil {
 			errm = append(errm, err)
@@ -128,11 +128,11 @@ func (views *Views) Load(vcn *ViewConfigNode) (err error) {
 				continue
 			}
 			tset.AddParseTree(k2, t0)
-			//logging.Debug(nil, "TSET: Parsing: Set: %v, text: %v", k, tmpls[v2])
+			//log.Debug(nil, "TSET: Parsing: Set: %v, text: %v", k, tmpls[v2])
 			//_, err3 := t.ParseInSet(tmpls[v2], tset)
 			//if err3 != nil { errm = append(errm, err3); continue }
 		}
-		logging.Trace(nil, "TemplateSet: view: %v, tset: %v", k, tset)
+		log.Debug(nil, "TemplateSet: view: %v, tset: %v", k, tset)
 		views.Views[k] = tset
 	}
 	if len(errm) == 0 {
@@ -145,8 +145,8 @@ func (views *Views) Load(vcn *ViewConfigNode) (err error) {
 // creates and populates a map usable in the LoadTemplateSets
 func (n *ViewConfigNode) nodeToMap() map[string]map[string]string {
 	n.rehashVcn()
-	logging.Trace(nil, "@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@")
-	logging.Trace(nil, "===> VCN: %#v", n)
+	log.Debug(nil, "@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@")
+	log.Debug(nil, "===> VCN: %#v", n)
 	vcfg := make(map[string]map[string]string)
 	// do 2 passes, so first time, we ensure we have info for all parents, and second time, we
 	// get info for all aliases.
@@ -222,13 +222,13 @@ func resolveAliases(n *ViewConfigNode, root *ViewConfigNode) {
 	//if an alias, it has no children (ie it inherits its children)
 	if n.AliasTo != "" {
 		n2 := findVcnByName(root, n.AliasTo)
-		logging.Trace(nil, "findVcnByName: name: %v, ----> N: %#v, ----> N2: %#v", n.AliasTo, n, n2)
+		log.Debug(nil, "findVcnByName: name: %v, ----> N: %#v, ----> N2: %#v", n.AliasTo, n, n2)
 		if n2 != nil {
-			logging.Trace(nil, "resolveAliases (BEFORE): n: %#v", n)
+			log.Debug(nil, "resolveAliases (BEFORE): n: %#v", n)
 			n3 := *n2
 			n3.AliasTo, n3.Name = n.AliasTo, n.Name
 			*n = n3
-			logging.Trace(nil, "resolveAliases (AFTER): n: %#v", n)
+			log.Debug(nil, "resolveAliases (AFTER): n: %#v", n)
 		}
 	} else {
 		for _, n2 := range n.Children {

@@ -10,6 +10,8 @@ import (
 
 const MinMimeSniffLen = 64 // 512 is default
 
+var log = logging.PkgLogger()
+
 // Server implements net.Listener and http.Handler.
 //
 // Typical Usage:
@@ -73,8 +75,8 @@ func (s *HTTPServer) ServeHttpPipe(w ResponseWriter, r *http.Request, f *Pipelin
 	// add a seq num to the id, so we can correlate requests in the log file
 	n := atomic.AddUint64(&s.seq, 1)
 	time0 := time.Now()
-	logging.Trace(nil, "Request %d: %s%s", n, r.Host, r.URL.Path)
+	log.Debug(nil, "Request %d: %s%s", n, r.Host, r.URL.Path)
 	s.Listener.Run(onClosed, onPaused, onRun)
-	logging.Debug(nil, "Request %d: %s%s, %d bytes, response: %d, in %v",
+	log.Debug(nil, "Request %d: %s%s, %d bytes, response: %d, in %v",
 		n, r.Host, r.URL.Path, w.NumBytesWritten(), w.ResponseCode(), time.Since(time0))
 }

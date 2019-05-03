@@ -33,6 +33,7 @@ This package expects the following:
 package app
 
 import (
+	"context"
 	"encoding/json"
 	"fmt"
 	"io"
@@ -58,6 +59,8 @@ import (
 	"github.com/ugorji/go-common/errorutil"
 	"github.com/ugorji/go-common/vfs"
 )
+
+var log = logging.PkgLogger()
 
 const (
 //Used for shared cache contents, etc
@@ -116,6 +119,12 @@ type myResponseError struct {
 	// Trace   string
 }
 
+func CtxCtx(c Context) context.Context { return ctxctx(c) }
+
+func ctxctx(c Context) context.Context {
+	return context.WithValue(context.TODO(), logging.AppContextKey, c)
+}
+
 func NewApp(devServer bool, uuid string, viewsCfgPath string, lld LowLevelDriver) (gapp *BaseApp, err error) {
 	defer errorutil.OnError(&err)
 	type tlld struct {
@@ -160,15 +169,15 @@ func NewApp(devServer bool, uuid string, viewsCfgPath string, lld LowLevelDriver
 		return
 	}
 	// vcfg := web.NodeToMap(vcn)
-	// logging.Trace(nil, "VCN: %v =======> VCFG: %v", vcn, vcfg)
+	// log.Debug(nil, "VCN: %v =======> VCFG: %v", vcn, vcfg)
 
 	toUrlLink := func(ctx Context, route string, params ...interface{}) (string, error) {
-		logging.Trace(ctx, "Getting Link for: route: %v, params: %v", route, params)
+		log.Debug(ctxctx(ctx), "Getting Link for: route: %v, params: %v", route, params)
 		sparams := make([]string, len(params))
 		for i, p := range params {
 			sparams[i] = fmt.Sprint(p)
 		}
-		// logging.Trace(ctx, "Calling Route: %v, with params: %v", route, params)
+		// log.Debug(ctx, "Calling Route: %v, with params: %v", route, params)
 		url0, err := gapp.Root.FindByName(route).ToURL(sparams...)
 		if err == nil {
 			return url0.String(), nil
@@ -266,7 +275,7 @@ func (h HTTPHandler) ServeHTTP(w0 http.ResponseWriter, r *http.Request) {
 	if gapp.Tier == DEVELOPMENT {
 		time0 := time.Now()
 		defer func() {
-			logging.Always(c, "Request Completed in: %v", time.Now().Sub(time0))
+			log.Always(ctxctx(c), "Request Completed in: %v", time.Now().Sub(time0))
 		}()
 	}
 	defer func() {
@@ -283,13 +292,13 @@ func (h HTTPHandler) ServeHTTP(w0 http.ResponseWriter, r *http.Request) {
 		http.Error(w0, err.Error(), 500)
 		return
 	}
-	//defer func() { logging.Debug(nil, "w.headerWritten: %v", w.headerWritten) }()
+	//defer func() { log.Debug(nil, "w.headerWritten: %v", w.headerWritten) }()
 	// w = web.ToResponseWriter(w0, r, web.GzipTypes)
 	// defer w.Finish()
 	w = web.AsResponseWriter(w0)
 	defer w.Flush()
 	//var c99 app.app.Context = c
-	//logging.Info(nil, "XXXXXXX: As App.Context: %v", reflect.TypeOf(c99
+	//log.Info(nil, "XXXXXXX: As App.Context: %v", reflect.TypeOf(c99
 
 	//Do not parse here. Instead, anyone needing req.Form[] should call FormValue first to ensure parsed.
 	//if err = r.ParseMultipartForm(defaultMaxMemory); err != nil {
@@ -321,13 +330,13 @@ func (h HTTPHandler) ServeHTTP(w0 http.ResponseWriter, r *http.Request) {
 					// only log information the first time when onceInitErr is set
 					if gapp.onceInitErr != nil {
 						if gapp.Tier == DEVELOPMENT {
-							logging.Severe(c, "Initialization Error: %v\n%s", gapp.onceInitErr, runtimeutil.Stack(nil, false))
+							log.Severe(ctxctx(c), "Initialization Error: %v\n%s", gapp.onceInitErr, runtimeutil.Stack(nil, false))
 							//debug.PrintStack()
 							if gapp.DumpRequestOnError {
 								DumpRequest(c, r)
 							}
 						} else {
-							logging.Severe(c, "Initialization Error: %v", gapp.onceInitErr)
+							log.Severe(ctxctx(c), "Initialization Error: %v", gapp.onceInitErr)
 						}
 					}
 				}
@@ -348,7 +357,7 @@ func (h HTTPHandler) ServeHTTP(w0 http.ResponseWriter, r *http.Request) {
 			return
 		}
 	}
-	logging.Trace(c, "Dispatching: URL: %v", r.RequestURI)
+	log.Debug(ctxctx(c), "Dispatching: URL: %v", r.RequestURI)
 	if err = Dispatch(c, gapp.Root, w, r); err != nil {
 		gapp.derr(err, c, w, r, h.OnErrorFn)
 		return
@@ -402,12 +411,12 @@ func (gapp *BaseApp) derr(
 ) {
 	if gapp.Tier == DEVELOPMENT {
 		//debug.PrintStack()
-		logging.Error(c, "Error handling request: %v\nStackTrace ... \n%s", err, runtimeutil.Stack(nil, false))
+		log.Error(ctxctx(c), "Error handling request: %v\nStackTrace ... \n%s", err, runtimeutil.Stack(nil, false))
 		if gapp.DumpRequestOnError {
 			DumpRequest(c, r)
 		}
 	} else {
-		logging.Error(c, "Error handling request: %v", err)
+		log.Error(ctxctx(c), "Error handling request: %v", err)
 	}
 	if onRequestError != nil {
 		onRequestError(err, c, w, r)
@@ -421,14 +430,14 @@ func (gapp *BaseApp) derr(
 		errTmpl = errTmpl.Lookup("content")
 	}
 	useJsonOnErr = useJsonOnErr || errTmpl == nil
-	logging.Trace(c, "&&&&&&&&&&&&&&&&: useJsonOnErr: %v", useJsonOnErr)
+	log.Debug(ctxctx(c), "&&&&&&&&&&&&&&&&: useJsonOnErr: %v", useJsonOnErr)
 	var (
 		data     map[string]interface{}
 		jsondata *myResponseError
 		err2     error
 	)
 	fnErr := func(view string, code int) {
-		logging.Trace(c, "fnErr: view: %v, code: %v", view, code)
+		log.Debug(ctxctx(c), "fnErr: view: %v, code: %v", view, code)
 		w.WriteHeader(code)
 		if useJsonOnErr {
 			jsondata.Code = code
@@ -446,7 +455,7 @@ func (gapp *BaseApp) derr(
 		}
 	}
 	//http.Error(w, fmt.Sprintf("Error: %v", err), http.StatusInternalServerError)
-	logging.Trace(c, "err: %v", err)
+	log.Debug(ctxctx(c), "err: %v", err)
 	if useJsonOnErr {
 		w.Header().Set("Content-Type", "text/plain")
 		jsondata = new(myResponseError)
@@ -474,17 +483,17 @@ func (gapp *BaseApp) derr(
 	}
 
 	if err2 != nil && err != err2 {
-		logging.Error2(c, err2, "Error while handling error: %v", err)
+		log.Error2(ctxctx(c), err2, "Error while handling error: %v", err)
 	}
 }
 
 func DumpRequest(c Context, r *http.Request) (err error) {
 	dump, err := httputil.DumpRequest(r, true)
 	if err != nil {
-		logging.Error2(c, err, "Error dumping request")
+		log.Error2(ctxctx(c), err, "Error dumping request")
 	}
 	if len(dump) > 0 {
-		logging.Debug(c, "REQUEST DUMP: \n%v", string(dump))
+		log.Debug(ctxctx(c), "REQUEST DUMP: \n%v", string(dump))
 	}
 	return
 }

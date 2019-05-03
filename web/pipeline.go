@@ -8,7 +8,6 @@ import (
 	"regexp"
 	"strings"
 
-	"github.com/ugorji/go-common/logging"
 	"github.com/ugorji/go-common/pool"
 )
 
@@ -43,7 +42,7 @@ func (p *Pipeline) Next(w ResponseWriter, r *http.Request) {
 	}
 	x := p.s[p.i]
 	p.i++
-	// logging.Trace(nil, "Calling Pipe: %T", x)
+	// log.Debug(nil, "Calling Pipe: %T", x)
 	x.ServeHttpPipe(w, r, p)
 }
 
@@ -107,7 +106,7 @@ func (t *gzipWriter) Write(b []byte) (i int, err error) {
 				t.gw.Reset(t.ResponseWriter)
 			}
 		} else {
-			logging.Trace(nil, "gzipWriter: skipping gzip. Content-Encoding already set.")
+			log.Debug(nil, "gzipWriter: skipping gzip. Content-Encoding already set.")
 		}
 	}
 	if t.gw != nil {
@@ -120,7 +119,7 @@ func (t *gzipWriter) Write(b []byte) (i int, err error) {
 
 func (t *gzipWriter) Flush() {
 	if t.gw != nil {
-		logging.Error2(nil, t.gw.Flush(), "Error flushing gzipWriter")
+		log.Error2(nil, t.gw.Flush(), "Error flushing gzipWriter")
 	}
 	t.ResponseWriter.Flush()
 }
@@ -175,7 +174,7 @@ func NewGzipWriterPool(level, initPoolLen, poolCap int) *pool.T {
 			}
 		case pool.DISPOSE:
 			if bv, ok := v.(*gzip.Writer); ok {
-				logging.Error2(nil, bv.Close(), "Error closing gzip Writer")
+				log.Error2(nil, bv.Close(), "Error closing gzip Writer")
 			}
 		}
 		return
@@ -192,7 +191,7 @@ func (s *GzipPipe) ServeHttpPipe(w ResponseWriter, r *http.Request, f *Pipeline)
 	w2 := &gzipWriter{ResponseWriter: w, s: s}
 	f.Next(w2, r)
 	w2.Flush() // gzip needs to close itself, so it must flush.
-	logging.Error2(nil, w2.Close(), "Error closing gzipWriter")
+	log.Error2(nil, w2.Close(), "Error closing gzipWriter")
 }
 
 //--------------------------------------
@@ -209,7 +208,7 @@ func (t *bufWriter) Write(b []byte) (i int, err error) {
 }
 
 func (t *bufWriter) Flush() {
-	logging.Error2(nil, t.b.Flush(), "Error flushing bufWriter")
+	log.Error2(nil, t.b.Flush(), "Error flushing bufWriter")
 	t.ResponseWriter.Flush()
 }
 
@@ -258,7 +257,7 @@ func (s *BufferPipe) ServeHttpPipe(w ResponseWriter, r *http.Request, f *Pipelin
 	w2 := &bufWriter{b: bw, s: s, ResponseWriter: w}
 	f.Next(w2, r)
 	w2.Flush() // we use a buffer internally, so MUST flush
-	logging.Error2(nil, w2.Close(), "Error closing bufWriter")
+	log.Error2(nil, w2.Close(), "Error closing bufWriter")
 }
 
 //--------------------------------------

@@ -5,9 +5,8 @@ import (
 	"reflect"
 	"strings"
 
-	"github.com/ugorji/go-common/logging"
-	"github.com/ugorji/go-common/tree"
 	"github.com/ugorji/go-common/errorutil"
+	"github.com/ugorji/go-common/tree"
 )
 
 //Hack: Holds a mapping of basic types (and their kinds) to slices of them,
@@ -81,7 +80,7 @@ func OrmFromIntf(d interface{}, m *PropertyList, indexesOnly bool) (err error) {
 			}
 		case MARSHAL_FTYPE:
 			var val []byte
-			logging.Trace(nil, "Calling Encode for: %v", fv)
+			log.Debug(nil, "Calling Encode for: %v", fv)
 			err = Codec.EncodeBytes(&val, fv.Interface())
 			if err != nil {
 				return
@@ -129,11 +128,11 @@ func OrmToIntf(m *PropertyList, d interface{}) (err error) {
 		dv = dv.Elem()
 	}
 	//dv := reflect.ValueOf(d).Elem()
-	logging.Trace(nil, " XYXYXYXYXY: m: %v, %#v", m, dv)
+	log.Debug(nil, " XYXYXYXYXY: m: %v, %#v", m, dv)
 	for sfname, fm := range tm.DbFields {
 		fv := dv.FieldByName(sfname)
 		//var val interface{}
-		//logging.Trace(nil, " YYYYY fmType: %v, field: %v ==> %#v, val: %v ==> %#v",
+		//log.Debug(nil, " YYYYY fmType: %v, field: %v ==> %#v, val: %v ==> %#v",
 		//	fm.Type, fm.FieldName, fm.ReflectType.Name(), fv.Type(), fv.Interface())
 		switch fm.Type {
 		case REGULAR_FTYPE:
@@ -145,7 +144,7 @@ func OrmToIntf(m *PropertyList, d interface{}) (err error) {
 			for _, val := range *m {
 				if val.Name == fm.DbName {
 					fsrc := val.Value.([]byte)
-					logging.Trace(nil, "Calling Decode for: %v", fsrc)
+					log.Debug(nil, "Calling Decode for: %v", fsrc)
 					err = Codec.DecodeBytes(fsrc, fv)
 					if err != nil {
 						return
@@ -191,7 +190,7 @@ func ormToIntfStruc(m *PropertyList, fr reflect.Value,
 	rt := stf.Type
 	rt2 := rt
 	fr2 := fr
-	logging.Trace(nil, "####### ormToIntfStruc: rVal: %#v, dsproplist: %#v", fr, *m)
+	log.Debug(nil, "####### ormToIntfStruc: rVal: %#v, dsproplist: %#v", fr, *m)
 	switch rt.Kind() {
 	case reflect.Map:
 		mykeyK := fm.DbName + "_k"
@@ -260,7 +259,7 @@ func ormToIntfStruc(m *PropertyList, fr reflect.Value,
 		rlen := 0
 		for _, mydbf := range tm4.DbFields {
 			mynm0 := fm.DbName + "_" + mydbf.DbName
-			logging.Trace(nil, "mydbf.ReflectType: %v, mynm0: %v", mydbf.ReflectType, mynm0)
+			log.Debug(nil, "mydbf.ReflectType: %v, mynm0: %v", mydbf.ReflectType, mynm0)
 			nmslc := reflect.MakeSlice(ormSlices[mydbf.ReflectType], 0, 4)
 			if nmslc, err := ormGetSetVal(m, mynm0, nmslc); err == nil && nmslc.Len() > 0 {
 				allNms = append(allNms, mynm0)
@@ -271,7 +270,7 @@ func ormToIntfStruc(m *PropertyList, fr reflect.Value,
 				allNmFM[mynm0] = mydbf
 			}
 		}
-		logging.Trace(nil, "rlen: %v, allNms: %v, allNmSlc: %v, allNmFM: %v",
+		log.Debug(nil, "rlen: %v, allNms: %v, allNmSlc: %v, allNmFM: %v",
 			rlen, allNms, allNmSlc, allNmFM)
 		//iterate through the allNmFM, and for each
 		for j := 0; j < rlen; j++ {
@@ -287,10 +286,10 @@ func ormToIntfStruc(m *PropertyList, fr reflect.Value,
 			sval = reflect.Append(sval, m1)
 		}
 		fr.Set(sval)
-		logging.Trace(nil, "slice sval: %#v", sval)
+		log.Debug(nil, "slice sval: %#v", sval)
 		//debug.PrintStack()
 	}
-	logging.Trace(nil, "returning from function")
+	log.Debug(nil, "returning from function")
 	return nil
 }
 
@@ -300,7 +299,7 @@ func ormFromIntfStruc(m *PropertyList, indexesOnly bool, fr reflect.Value,
 	rt := stf.Type
 	rt2 := rt
 	fr2 := fr
-	logging.Trace(nil, " ***** tm.Type: %+v, field: %v, rt.Kind: %v", tm.Type, fm.FieldName, rt.Kind())
+	log.Debug(nil, " ***** tm.Type: %+v, field: %v, rt.Kind: %v", tm.Type, fm.FieldName, rt.Kind())
 	switch rt.Kind() {
 	case reflect.Map:
 		mkeys := fr.MapKeys()
@@ -343,7 +342,7 @@ func ormFromIntfStruc(m *PropertyList, indexesOnly bool, fr reflect.Value,
 		for j, _ := range tm4.DbFields {
 			if fst, ok := rt4.FieldByName(j); ok {
 				if fm2, ok := tm4.DbFields[fst.Name]; ok {
-					logging.Trace(nil, "fst.Type: %v, .Name: %v, slice: %v",
+					log.Debug(nil, "fst.Type: %v, .Name: %v, slice: %v",
 						fst.Type, fst.Name, ormSlices[fst.Type.Kind()])
 
 					for k := 0; k < rlen; k++ {
@@ -404,7 +403,7 @@ func ormCoerce(val reflect.Value, rk reflect.Kind) reflect.Value {
 	if rki != nil {
 		rkt = reflect.ValueOf(rki)
 	}
-	//logging.Trace(nil, "TTTTTTTT ormCoerce: val: %+v, kind: %v, return: %v", val, rk, rkt)
+	//log.Debug(nil, "TTTTTTTT ormCoerce: val: %+v, kind: %v, return: %v", val, rk, rkt)
 	return rkt
 }
 
@@ -441,7 +440,7 @@ func ormSetVal(fv reflect.Value, val reflect.Value) {
 	case reflect.Bool:
 		fv.SetBool(val.Bool())
 	default:
-		logging.Trace(nil, "Unknown entity type in ormSetValue: %v", val)
+		log.Debug(nil, "Unknown entity type in ormSetValue: %v", val)
 		fv.Set(val)
 	}
 }
@@ -457,7 +456,7 @@ func ormGetSetVal(m *PropertyList, key string, rV reflect.Value) (reflect.Value,
 		elemTyp = typ.Elem()
 		//case reflect.Ptr: elemTyp = typ.Elem()
 	}
-	logging.Trace(nil, "XXXXXXX: elemTyp: %v, %#v", elemTyp, elemTyp)
+	log.Debug(nil, "XXXXXXX: elemTyp: %v, %#v", elemTyp, elemTyp)
 	for _, val := range *m {
 		if val.Name == key {
 			//convert it to expected type
@@ -466,9 +465,9 @@ func ormGetSetVal(m *PropertyList, key string, rV reflect.Value) (reflect.Value,
 			if isSlice {
 				elemVal = reflect.New(elemTyp).Elem()
 			}
-			logging.Trace(nil, "XXXXXXX: elemVal: %v, %#v", elemVal, elemVal)
+			log.Debug(nil, "XXXXXXX: elemVal: %v, %#v", elemVal, elemVal)
 			dVal := reflect.ValueOf(val.Value)
-			logging.Trace(nil, "XXXXXXX: dVal: %v, %#v", dVal, dVal)
+			log.Debug(nil, "XXXXXXX: dVal: %v, %#v", dVal, dVal)
 			ormSetVal(elemVal, dVal)
 			if isSlice {
 				rV = reflect.Append(rV, elemVal)
@@ -489,7 +488,7 @@ func ormGetSetVal(m *PropertyList, key string, rV reflect.Value) (reflect.Value,
 //(especially *Key, BlobKey and Time)
 func addToPropList(m *PropertyList, name string, val interface{}, indexesOnly bool,
 	fv reflect.Value, isSlice bool, fm *DbFieldMeta, tm *TypeMeta) {
-	logging.Trace(nil, "addToPropList: name: %v, val: %v, rV: %v, rkind: %v",
+	log.Debug(nil, "addToPropList: name: %v, val: %v, rV: %v, rkind: %v",
 		name, val, fv, fv.Kind())
 	if fv.IsValid() {
 		switch fv.Kind() {
@@ -502,12 +501,12 @@ func addToPropList(m *PropertyList, name string, val interface{}, indexesOnly bo
 		}
 	}
 
-	logging.Trace(nil, "Attempt add to property list: name: %v, val: %v, %#v", name, val, val)
+	log.Debug(nil, "Attempt add to property list: name: %v, val: %v, %#v", name, val, val)
 	//We can't check individually if we should store rows, since we have to store all or
 	//nothing of combo objects (maps, slices, struct, etc).
 	//stre := fvc('s', val, fm, tm)
 	//if ! stre {
-	//	logging.Trace(nil, "FVC Store: False. Skipping: key: %v, value: %v", name, val)
+	//	log.Debug(nil, "FVC Store: False. Skipping: key: %v, value: %v", name, val)
 	//	return
 	//}
 
@@ -524,7 +523,7 @@ func addToPropList(m *PropertyList, name string, val interface{}, indexesOnly bo
 	case reflect.Float32, reflect.Float64:
 		val = fv.Float()
 	case reflect.String:
-		//logging.Trace(nil, "String. Type: %v, cdBlobkeyTyp: %v, val: %v",
+		//log.Debug(nil, "String. Type: %v, cdBlobkeyTyp: %v, val: %v",
 		//	fv.Type(), richapp.lobkeyTyp, fv.String())
 		//sval := fv.String()
 		//switch fv.Type() {
@@ -542,12 +541,12 @@ func addToPropList(m *PropertyList, name string, val interface{}, indexesOnly bo
 		val = fv.Bool()
 	}
 	if proceedAndSet {
-		logging.Trace(nil, "Adding to property list: name: %v, val: %v, %#v", name, val, val)
+		log.Debug(nil, "Adding to property list: name: %v, val: %v, %#v", name, val, val)
 		indx := fvc('i', val, fm, tm)
 		if !indexesOnly || indx {
 			*m = append(*m, Property{Name: name, Value: val, NoIndex: !indx, Multiple: isSlice})
 		}
-		logging.Trace(nil, "addToPropList: PropertyList: %#v", *m)
+		log.Debug(nil, "addToPropList: PropertyList: %#v", *m)
 	}
 }
 

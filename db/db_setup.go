@@ -7,11 +7,10 @@ import (
 	"strings"
 	"sync"
 	"time"
-	"github.com/ugorji/go-common/logging"
 
 	//"runtime/debug"
-	"github.com/ugorji/go-common/safestore"
 	"github.com/ugorji/go-common/errorutil"
+	"github.com/ugorji/go-common/safestore"
 )
 
 const (
@@ -82,7 +81,7 @@ func GetLoadedReflectTypeFromKind(kind string, shape string) reflect.Type {
 }
 
 func GetStructMeta(s interface{}) (tm *TypeMeta, err error) {
-	//logging.Trace(nil, "GetStructMeta: %#v", s)
+	//log.Debug(nil, "GetStructMeta: %#v", s)
 	return GetStructMetaFromType(reflect.TypeOf(s))
 }
 
@@ -110,7 +109,7 @@ func GetStructMetaFromType(rt reflect.Type) (tm *TypeMeta, err error) {
 		}
 	} else {
 		//debug.PrintStack()
-		logging.Trace(nil, "Creating StructMeta for: %v", rt)
+		log.Debug(nil, "Creating StructMeta for: %v", rt)
 		tm = NewTypeMeta()
 		tm.Type = rt
 		if err = addStructMetaFromTypeForStructInfo(rt, tm); err != nil {
@@ -128,8 +127,8 @@ func GetStructMetaFromType(rt reflect.Type) (tm *TypeMeta, err error) {
 			StructMetaKinds.Put(smkKey, rt, 0)
 			StructMetas.Put(rt, tm, 0)
 		}
-		logging.Trace(nil, "Created StructMeta for: %v: %#v", rt, tm)
-		//logging.Trace(nil, "Created StructMeta for: %v: %s", rt, util.ValuePrintfer{tm})
+		log.Debug(nil, "Created StructMeta for: %v: %#v", rt, tm)
+		//log.Debug(nil, "Created StructMeta for: %v: %s", rt, util.ValuePrintfer{tm})
 	}
 	//logging.RawOut("%+v", tm)
 	return

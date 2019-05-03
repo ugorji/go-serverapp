@@ -283,7 +283,7 @@ func (c *BasicContext) Store() safestore.I {
 }
 
 func (c *BasicContext) Id() string {
-	return fmt.Sprintf("%s %d", c.TheAppUUID, c.SeqNum)
+	return fmt.Sprintf("%s-%d", c.TheAppUUID, c.SeqNum)
 }
 
 func (c *BasicContext) AppUUID() string {

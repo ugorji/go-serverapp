@@ -15,10 +15,10 @@ import (
 	"time"
 
 	"github.com/ugorji/go-serverapp/app"
+	"github.com/ugorji/go-common/errorutil"
 	"github.com/ugorji/go-common/logging"
 	"github.com/ugorji/go-common/printf"
 	"github.com/ugorji/go-common/safestore"
-	"github.com/ugorji/go-common/errorutil"
 )
 
 type EntityNotFoundError string
@@ -26,6 +26,8 @@ type EntityNotFoundError string
 func (e EntityNotFoundError) Error() string {
 	return string(e)
 }
+
+var log = logging.PkgLogger()
 
 const (
 	EntityCacheKeyPfx = "db/db::"
@@ -188,10 +190,10 @@ func PreSave(ctx app.Context, useCache bool, keys []app.Key, dst []interface{}) 
 
 func PostSave(ctx app.Context, keys []app.Key, dst []interface{}) (err error) {
 	defer errorutil.OnError(&err)
-	//logging.Trace(nil, "Num Keys: %v, Num Objects: %v", len(keys), len(dst))
+	//log.Debug(nil, "Num Keys: %v, Num Objects: %v", len(keys), len(dst))
 	for i := 0; i < len(dst); i++ {
 		d := dst[i]
-		//logging.Trace(nil, "BEFORE SAVE: %T %+v", d, d)
+		//log.Debug(nil, "BEFORE SAVE: %T %+v", d, d)
 		if _, err = FromDatastoreKey(ctx, d, keys[i]); err != nil {
 			return err
 		}
@@ -200,7 +202,7 @@ func PostSave(ctx app.Context, keys []app.Key, dst []interface{}) (err error) {
 				return err
 			}
 		}
-		//logging.Trace(nil, "AFTER SAVE: %T %+v", d, d)
+		//log.Debug(nil, "AFTER SAVE: %T %+v", d, d)
 	}
 	//if useCache {
 	//	err = CachePut(ctx, keys, dst)
@@ -259,12 +261,12 @@ func Gets(ctx app.Context, useCache bool, keys []app.Key, dst []interface{}) (er
 		dkeys = make([]app.Key, 0, 4)
 		ddst = make([]interface{}, 0, 4)
 		cresults, err2 := CacheGet(ctx, keys, dst)
-		logging.Trace(ctx, "CacheGet: keys: %v, dst: %v, result: %v, err: %v",
+		log.Debug(app.CtxCtx(ctx), "CacheGet: keys: %v, dst: %v, result: %v, err: %v",
 			keys, printf.ValuePrintfer{dst}, cresults, err2)
 		//println("==============================")
 		//debug.PrintStack()
 		//if len(misses) == 0 && len(dst) == 1 {
-		//	logging.Trace(ctx, "==> %#v", dst[0])
+		//	log.Debug(app.CtxCtx(ctx), "==> %#v", dst[0])
 		//}
 		//err = nil
 		for i := 0; i < len(cresults); i++ {
@@ -288,11 +290,11 @@ func Gets(ctx app.Context, useCache bool, keys []app.Key, dst []interface{}) (er
 		}
 	}
 	if len(dkeys) > 0 {
-		logging.Trace(ctx, "After Checking Cache: Will Check datastore for keys: %v", dkeys)
+		log.Debug(app.CtxCtx(ctx), "After Checking Cache: Will Check datastore for keys: %v", dkeys)
 		dstpass := ddst
 		dkeyspass := dkeys
 		errds := dr.DatastoreGet(ctx, dkeys, ddst)
-		logging.Trace(ctx, "Error from DatastoreGet: %v, ddst: %v", errds, printf.ValuePrintfer{ddst})
+		log.Debug(app.CtxCtx(ctx), "Error from DatastoreGet: %v, ddst: %v", errds, printf.ValuePrintfer{ddst})
 		if errds == nil {
 		} else if errs, ok := errorutil.Base(errds).(errorutil.Multi); ok {
 			// look for datastore misses
@@ -301,7 +303,7 @@ func Gets(ctx app.Context, useCache bool, keys []app.Key, dst []interface{}) (er
 			for i := 0; i < len(errs); i++ {
 				if errs[i] == nil {
 				} else if IsNotFoundError(errs[i]) {
-					logging.Trace(ctx, "Missed in %v: Datastore Key: %v", "Datastore", dkeys[i])
+					log.Debug(app.CtxCtx(ctx), "Missed in %v: Datastore Key: %v", "Datastore", dkeys[i])
 					dkeymisses = append(dkeymisses, dkeys[i])
 					for j := 0; j < len(keys); j++ {
 						//if the 2 keys are exactly the same
@@ -331,7 +333,7 @@ func Gets(ctx app.Context, useCache bool, keys []app.Key, dst []interface{}) (er
 	if useCache {
 		ldkm := len(dkeymisses)
 		if ldkm > 0 {
-			logging.Trace(ctx, "Storing misses (negatives): %v", dkeymisses)
+			log.Debug(app.CtxCtx(ctx), "Storing misses (negatives): %v", dkeymisses)
 			dstmisses := make([]interface{}, ldkm)
 			for i := 0; i < ldkm; i++ {
 				dstmisses[i] = false
@@ -342,7 +344,7 @@ func Gets(ctx app.Context, useCache bool, keys []app.Key, dst []interface{}) (er
 		}
 	}
 	//if len(retmisses) == 0 && len(dst) == 1 {
-	//	logging.Trace(ctx, "XXXX==> %p, %#v", dst[0], dst[0])
+	//	log.Debug(app.CtxCtx(ctx), "XXXX==> %p, %#v", dst[0], dst[0])
 	//}
 	//Total Misses = cache negatives + datastore misses
 	for i := 0; i < len(merr); i++ {
@@ -384,10 +386,10 @@ func Puts(ctx app.Context, useCache bool, keys []app.Key, dst []interface{}) (er
 			return
 		}
 		dmaps[j] = &dpl1
-		logging.Trace(ctx, "XXXXXXXXXX OrmFromIntf: d: %#v, map: %v", ddst[j], dmaps[j])
+		log.Debug(app.CtxCtx(ctx), "XXXXXXXXXX OrmFromIntf: d: %#v, map: %v", ddst[j], dmaps[j])
 	}
-	//logging.Trace(ctx, "PropertyList: %#v", dmaps)
-	logging.Trace(ctx, "PropertyList: %s", printf.ValuePrintfer{dmaps})
+	//log.Debug(app.CtxCtx(ctx), "PropertyList: %#v", dmaps)
+	log.Debug(app.CtxCtx(ctx), "PropertyList: %s", printf.ValuePrintfer{dmaps})
 
 	dkeys, err = dr.DatastorePut(ctx, dkeys, ddst, dmaps)
 	if err != nil {
@@ -410,16 +412,16 @@ func Deletes(ctx app.Context, useCache bool, keys ...app.Key) (err error) {
 }
 
 func CachePut(ctx app.Context, keys []app.Key, dst []interface{}) (err error) {
-	//defer func() { if err != nil { logging.Error(ctx, "%v", err) } }()
+	//defer func() { if err != nil { log.Error(ctx, "%v", err) } }()
 	defer errorutil.OnError(&err)
 	mcitems := make([]*safestore.Item, 0, 4)
-	//logging.Trace(nil, "CachePut: dst: %#v, tm: %#v", dst, tm)
+	//log.Debug(nil, "CachePut: dst: %#v, tm: %#v", dst, tm)
 	dr := app.AppDriver(ctx.AppUUID())
 	sharedCache := dr.SharedCache(false)
 	sf := ctx.Store()
 	var kKind, kShape string
 	for i := 0; i < len(dst); i++ {
-		logging.Trace(ctx, "CachePut: i: %v/%v, dst: %v, rt: %v",
+		log.Debug(app.CtxCtx(ctx), "CachePut: i: %v/%v, dst: %v, rt: %v",
 			i, len(dst), printf.ValuePrintfer{dst[i]}, reflect.TypeOf(dst[i]))
 		//this may be false (if a negative)
 		if kKind, kShape, _, err = dr.GetInfoFromKey(ctx, keys[i]); err != nil {
@@ -429,8 +431,8 @@ func CachePut(ctx app.Context, keys []app.Key, dst []interface{}) (err error) {
 		//tm := StructMetas.Get(StructMetaKinds.Get(keys[i].Kind())).(*TypeMeta)
 		//tm, err := GetStructMeta(dst[i])
 
-		logging.Trace(ctx, "CachePut: tm: %v, err: %v", tm, err)
-		//logging.Trace(ctx, "CachePut: tm: %v, err: %v", logging.ValuePrinter{tm}, err)
+		log.Debug(app.CtxCtx(ctx), "CachePut: tm: %v, err: %v", tm, err)
+		//log.Debug(ctx, "CachePut: tm: %v, err: %v", logging.ValuePrinter{tm}, err)
 		if err != nil {
 			return err
 		}
@@ -453,7 +455,7 @@ func CachePut(ctx app.Context, keys []app.Key, dst []interface{}) (err error) {
 			mcitems = append(mcitems, item)
 		}
 	}
-	logging.Trace(ctx, "Attempting to insert in SharedCache: %v items", len(mcitems))
+	log.Debug(app.CtxCtx(ctx), "Attempting to insert in SharedCache: %v items", len(mcitems))
 	if len(mcitems) > 0 && sharedCache != nil {
 		if err = sharedCache.CachePut(ctx, mcitems...); err != nil {
 			return
@@ -465,8 +467,8 @@ func CachePut(ctx app.Context, keys []app.Key, dst []interface{}) (err error) {
 // Does a CacheGet.
 func CacheGet(ctx app.Context, keys []app.Key, dst []interface{}) (result []CacheResult, err error) {
 	defer errorutil.OnError(&err)
-	logging.Trace(ctx, "Start of CacheGet")
-	//logging.Trace(nil, "CacheGet called")
+	log.Debug(app.CtxCtx(ctx), "Start of CacheGet")
+	//log.Debug(nil, "CacheGet called")
 	if len(keys) == 0 || len(keys) != len(dst) {
 		err = fmt.Errorf("Gets: lengths: 0 or mismatch; keys: %v, entities: %v", len(keys), len(dst))
 		return
@@ -500,11 +502,11 @@ func CacheGet(ctx app.Context, keys []app.Key, dst []interface{}) (result []Cach
 			val := sf.Get(enckey)
 			if val != nil {
 				if _, ok := val.(bool); ok {
-					logging.Trace(ctx, "Miss Recorded Found in %v: Datastore Key: %v",
+					log.Debug(app.CtxCtx(ctx), "Miss Recorded Found in %v: Datastore Key: %v",
 						"RequestCache", keys[i])
 					result[i] = CacheNeg
 				} else {
-					logging.Trace(ctx, "Found in %v: Datastore Key: %v, Value: %v",
+					log.Debug(app.CtxCtx(ctx), "Found in %v: Datastore Key: %v, Value: %v",
 						"RequestCache", keys[i], val)
 					fnHit(i, val)
 				}
@@ -516,10 +518,10 @@ func CacheGet(ctx app.Context, keys []app.Key, dst []interface{}) (result []Cach
 			if _ = dr.InstanceCache().CacheGet(ctx, it); it.Value != nil {
 				if _, ok := it.Value.(bool); ok {
 					result[i] = CacheNeg
-					logging.Trace(ctx, "Miss Recorded Found in %v: Datastore Key: %v",
+					log.Debug(app.CtxCtx(ctx), "Miss Recorded Found in %v: Datastore Key: %v",
 						"InstanceCache", keys[i])
 				} else {
-					logging.Trace(ctx, "Found in %v: Datastore Key: %v, Value: %#v",
+					log.Debug(app.CtxCtx(ctx), "Found in %v: Datastore Key: %v, Value: %#v",
 						"InstanceCache", keys[i], it.Value)
 					fnHit(i, it.Value)
 				}
@@ -535,31 +537,31 @@ func CacheGet(ctx app.Context, keys []app.Key, dst []interface{}) (result []Cach
 	}
 
 	if len(mcck) > 0 && sharedCache != nil {
-		logging.Trace(ctx, "Checking SharedCache for: %v", mccki)
+		log.Debug(app.CtxCtx(ctx), "Checking SharedCache for: %v", mccki)
 		err2 := sharedCache.CacheGet(ctx, mcck...)
-		logging.Trace(ctx, "After SharedCache GetMulti. err: %v", err2)
+		log.Debug(app.CtxCtx(ctx), "After SharedCache GetMulti. err: %v", err2)
 		if err2 != nil {
 			err = err2
 			return
 		}
 		for i, dki := range mccki {
 			v := mcck[i].Value
-			logging.Trace(ctx, "----- SharedCache Result: %#v", v)
+			log.Debug(app.CtxCtx(ctx), "----- SharedCache Result: %#v", v)
 			if v != nil {
 				if _, ok2 := v.(bool); ok2 {
-					logging.Trace(ctx, "Miss Recorded Found in SharedCache: "+
+					log.Debug(app.CtxCtx(ctx), "Miss Recorded Found in SharedCache: "+
 						"Datastore Key: %v, Value: %v", dki.k, v)
 					result[dki.i] = CacheNeg
 				} else {
-					logging.Trace(ctx, "SharedCache Unmarshal: %v, %#v", dki.i, dst[dki.i])
-					logging.Trace(ctx, "Found in SharedCache: Datastore Key: %v, Value: %v", dki.k, v)
+					log.Debug(app.CtxCtx(ctx), "SharedCache Unmarshal: %v, %#v", dki.i, dst[dki.i])
+					log.Debug(app.CtxCtx(ctx), "Found in SharedCache: Datastore Key: %v, Value: %v", dki.k, v)
 					fnHit(dki.i, v)
 				}
 			}
 		}
 	}
 
-	logging.Trace(ctx, "Cache Results: %v", result)
+	log.Debug(app.CtxCtx(ctx), "Cache Results: %v", result)
 	return
 }
 
@@ -611,7 +613,7 @@ func FromDatastoreKey(ctx app.Context, d interface{}, key app.Key) (d2 interface
 	}
 	//logging.BIOutput.Write(debug.Stack())
 	//util.PrintStackFrames(logging.BIOutput, 3)
-	//logging.Trace(nil, "FromDatastoreKey: d: %#v", d)
+	//log.Debug(nil, "FromDatastoreKey: d: %#v", d)
 	if tm == nil {
 		if tm, err = GetStructMeta(d); err != nil {
 			return
@@ -652,11 +654,11 @@ func FromDatastoreKey(ctx app.Context, d interface{}, key app.Key) (d2 interface
 // from the backend datastore.
 func DatastoreKey(ctx app.Context, d interface{}) (k app.Key, err error) {
 	// defer func() {
-	// 	logging.Error(nil, ">>>>> last %v %T\n%s\n", err, err, util.Stack(nil, false))
+	// 	log.Error(nil, ">>>>> last %v %T\n%s\n", err, err, util.Stack(nil, false))
 	// }()
 	defer errorutil.OnError(&err)
 	// defer func() {
-	// 	logging.Error(nil, ">>>>> before last %v %T\n%s\n", err, err, util.Stack(nil, false))
+	// 	log.Error(nil, ">>>>> before last %v %T\n%s\n", err, err, util.Stack(nil, false))
 	// }()
 	if dsw, ok := d.(DatastoreKeyAware); ok {
 		return dsw.DatastoreKey(ctx)
@@ -714,7 +716,7 @@ func fromDskey(ctx app.Context, s reflect.Value, field string, shape string, key
 	if !f.IsValid() {
 		return fmt.Errorf("No Field Named: %v found in %v", field, s.Interface())
 	}
-	//logging.Trace(nil, "fromDskey: field: %v, val: %#v, fieldval: %#v, valid: %v, " +
+	//log.Debug(nil, "fromDskey: field: %v, val: %#v, fieldval: %#v, valid: %v, " +
 	//"settable: %v, key: %v", field, s.Interface(), f.Interface(), f.IsValid(), f.CanSet(), key)
 	dr := app.AppDriver(ctx.AppUUID())
 	_, _, kid, err := dr.GetInfoFromKey(ctx, key)
@@ -766,13 +768,13 @@ func QuerySupport(ctx app.Context, qString string, kind string,
 	var kKind, kShape string
 	//Do caching if instance caching supported.
 	useQCache, cacheTimeout := tm.UseInstanceCache, tm.InstanceCacheTimeout
-	logging.Trace(ctx, "QuerySupport: Will Check Query Cache for kind: %v, shape: %v", kind, shape)
+	log.Debug(app.CtxCtx(ctx), "QuerySupport: Will Check Query Cache for kind: %v, shape: %v", kind, shape)
 	dr := app.AppDriver(ctx.AppUUID())
 	if useQCache {
 		it := &safestore.Item{Key: QueryCacheKeyPfx + qString}
 		dr.InstanceCache().CacheGet(ctx, it)
 		if it.Value != nil {
-			logging.Trace(ctx, "QuerySupport: Found results in cache")
+			log.Debug(app.CtxCtx(ctx), "QuerySupport: Found results in cache")
 			for _, key := range it.Value.([]app.Key) {
 				kKind, kShape, _, err = dr.GetInfoFromKey(ctx, key)
 				if err != nil {
@@ -786,11 +788,11 @@ func QuerySupport(ctx app.Context, qString string, kind string,
 				} //skip keys with different shape
 				res = append(res, key)
 			}
-			logging.Trace(ctx, "QuerySupport: Returning results from cache: %v", res)
+			log.Debug(app.CtxCtx(ctx), "QuerySupport: Returning results from cache: %v", res)
 			return
 		}
 	}
-	logging.Trace(ctx, "QuerySupport: Not In Query Cache. Will look at backend query results")
+	log.Debug(app.CtxCtx(ctx), "QuerySupport: Not In Query Cache. Will look at backend query results")
 	//Not in query cache. So continue.
 	var cachedKeys []app.Key
 	//if processcache, store query in cache again (for maybe later)
@@ -800,7 +802,7 @@ func QuerySupport(ctx app.Context, qString string, kind string,
 
 	var key app.Key
 	for {
-		//logging.Trace(nil, "GAE DRIVER: %#v", obj)
+		//log.Debug(nil, "GAE DRIVER: %#v", obj)
 		key, lastqcur, err = nextFn()
 		if errorutil.Base(err) == io.EOF {
 			err = nil
@@ -812,7 +814,7 @@ func QuerySupport(ctx app.Context, qString string, kind string,
 		if kKind, kShape, _, err = dr.GetInfoFromKey(ctx, key); err != nil {
 			return
 		}
-		logging.Trace(ctx, "QuerySupport: Will check key: %v, having kind: %v, Shape: %v", key, kKind, kShape)
+		log.Debug(app.CtxCtx(ctx), "QuerySupport: Will check key: %v, having kind: %v, Shape: %v", key, kKind, kShape)
 		if kind != "" && kind != kKind {
 			continue
 		}
@@ -833,7 +835,7 @@ func QuerySupport(ctx app.Context, qString string, kind string,
 		}
 		dr.InstanceCache().CachePut(ctx, it)
 	}
-	logging.Trace(ctx, "QuerySupport: Returning Keys: %v", res)
+	log.Debug(app.CtxCtx(ctx), "QuerySupport: Returning Keys: %v", res)
 	return
 }
 
@@ -882,7 +884,7 @@ func Load(ctx app.Context, useCache bool, entities []interface{}) (err error) {
 		}
 		keys = append(keys, key)
 	}
-	logging.Trace(ctx, "db.Load: %v/%v entities: %v, keys: %v", len(entities), len(keys),
+	log.Debug(app.CtxCtx(ctx), "db.Load: %v/%v entities: %v, keys: %v", len(entities), len(keys),
 		printf.ValuePrintfer{entities}, printf.ValuePrintfer{keys})
 	//debug.PrintStack()
 	//Call Get on them
