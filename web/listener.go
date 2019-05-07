@@ -105,7 +105,7 @@ func (s *Listener) handlePanic() {
 		if s.panicFlags&OnPanicLog != 0 {
 			switch v := x.(type) {
 			case error:
-				log.Error2(nil, v, "Panic Recovered during ServeHTTP")
+				log.IfError(nil, v, "Panic Recovered during ServeHTTP")
 			default:
 				log.Error(nil, "Panic Recovered during ServeHTTP: %v", x)
 			}
@@ -239,7 +239,7 @@ func closeFile(w *os.File, name string) {
 	if w == nil {
 		return
 	}
-	log.Error2(nil, w.Close(), "Error closing file: %s", name)
+	log.IfError(nil, w.Close(), "Error closing file: %s", name)
 }
 
 func signalCond(c *sync.Cond) {
@@ -262,6 +262,6 @@ func waitCond(c *sync.Cond, unlock bool, fn func() bool) {
 // Don't use Helper function for logging, else wrong file/line info is in log file
 // func logErr(err error, message string, params ...interface{}) {
 // 	if err != nil {
-// 		log.Error2(nil, err, message, params...)
+// 		log.IfError(nil, err, message, params...)
 // 	}
 // }

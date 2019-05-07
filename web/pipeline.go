@@ -119,7 +119,7 @@ func (t *gzipWriter) Write(b []byte) (i int, err error) {
 
 func (t *gzipWriter) Flush() {
 	if t.gw != nil {
-		log.Error2(nil, t.gw.Flush(), "Error flushing gzipWriter")
+		log.IfError(nil, t.gw.Flush(), "Error flushing gzipWriter")
 	}
 	t.ResponseWriter.Flush()
 }
@@ -174,7 +174,7 @@ func NewGzipWriterPool(level, initPoolLen, poolCap int) *pool.T {
 			}
 		case pool.DISPOSE:
 			if bv, ok := v.(*gzip.Writer); ok {
-				log.Error2(nil, bv.Close(), "Error closing gzip Writer")
+				log.IfError(nil, bv.Close(), "Error closing gzip Writer")
 			}
 		}
 		return
@@ -191,7 +191,7 @@ func (s *GzipPipe) ServeHttpPipe(w ResponseWriter, r *http.Request, f *Pipeline)
 	w2 := &gzipWriter{ResponseWriter: w, s: s}
 	f.Next(w2, r)
 	w2.Flush() // gzip needs to close itself, so it must flush.
-	log.Error2(nil, w2.Close(), "Error closing gzipWriter")
+	log.IfError(nil, w2.Close(), "Error closing gzipWriter")
 }
 
 //--------------------------------------
@@ -208,7 +208,7 @@ func (t *bufWriter) Write(b []byte) (i int, err error) {
 }
 
 func (t *bufWriter) Flush() {
-	log.Error2(nil, t.b.Flush(), "Error flushing bufWriter")
+	log.IfError(nil, t.b.Flush(), "Error flushing bufWriter")
 	t.ResponseWriter.Flush()
 }
 
@@ -257,7 +257,7 @@ func (s *BufferPipe) ServeHttpPipe(w ResponseWriter, r *http.Request, f *Pipelin
 	w2 := &bufWriter{b: bw, s: s, ResponseWriter: w}
 	f.Next(w2, r)
 	w2.Flush() // we use a buffer internally, so MUST flush
-	log.Error2(nil, w2.Close(), "Error closing bufWriter")
+	log.IfError(nil, w2.Close(), "Error closing bufWriter")
 }
 
 //--------------------------------------

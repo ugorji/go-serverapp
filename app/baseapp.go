@@ -275,7 +275,7 @@ func (h HTTPHandler) ServeHTTP(w0 http.ResponseWriter, r *http.Request) {
 	if gapp.Tier == DEVELOPMENT {
 		time0 := time.Now()
 		defer func() {
-			log.Always(ctxctx(c), "Request Completed in: %v", time.Now().Sub(time0))
+			log.Notice(ctxctx(c), "Request Completed in: %v", time.Now().Sub(time0))
 		}()
 	}
 	defer func() {
@@ -483,14 +483,14 @@ func (gapp *BaseApp) derr(
 	}
 
 	if err2 != nil && err != err2 {
-		log.Error2(ctxctx(c), err2, "Error while handling error: %v", err)
+		log.IfError(ctxctx(c), err2, "Error while handling error: %v", err)
 	}
 }
 
 func DumpRequest(c Context, r *http.Request) (err error) {
 	dump, err := httputil.DumpRequest(r, true)
 	if err != nil {
-		log.Error2(ctxctx(c), err, "Error dumping request")
+		log.IfError(ctxctx(c), err, "Error dumping request")
 	}
 	if len(dump) > 0 {
 		log.Debug(ctxctx(c), "REQUEST DUMP: \n%v", string(dump))

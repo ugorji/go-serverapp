@@ -67,7 +67,7 @@ func (s *AccessLogger) flush() {
 	if s.bufw == nil || s.file == nil {
 		return
 	}
-	log.Error2(nil, s.bufw.Flush(), "Error flushing access log file to disk")
+	log.IfError(nil, s.bufw.Flush(), "Error flushing access log file to disk")
 }
 
 func (s *AccessLogger) Close() (err error) {
@@ -114,7 +114,7 @@ func (s *AccessLogger) ServeHttpPipe(w ResponseWriter, r *http.Request, f *Pipel
 		r.Referer(),
 		r.UserAgent(),
 	)
-	log.Error2(nil, err, "Error logging access")
+	log.IfError(nil, err, "Error logging access")
 	return
 
 }
