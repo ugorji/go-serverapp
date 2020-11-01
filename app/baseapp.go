@@ -160,7 +160,7 @@ func NewApp(devServer bool, uuid string, viewsCfgPath string, lld LowLevelDriver
 	vcn := new(web.ViewConfigNode)
 
 	//f, err := os.Open(viewsCfgPath)
-	f, _, err := gapp.ResVfs.Find(viewsCfgPath)
+	f, err := gapp.ResVfs.Find(viewsCfgPath)
 	if err != nil {
 		return
 	}

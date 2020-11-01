@@ -81,10 +81,10 @@ func NewViews() *Views {
 func (views *Views) AddTemplates(vfs *vfs.Vfs, r *regexp.Regexp) (err error) {
 	defer errorutil.OnError(&err)
 	errm := make(errorutil.Multi, 0, 4)
-	ls := vfs.Matches(r)
+	ls := vfs.Matches(r, nil, true)
 	log.Debug(nil, "LT: Matches: %v", ls)
 	for _, s := range ls {
-		rc, _, err := vfs.Find(s)
+		rc, err := vfs.Find(s)
 		if err != nil {
 			errm = append(errm, err)
 			continue
