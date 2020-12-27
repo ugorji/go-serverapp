@@ -1,6 +1,6 @@
 # go-serverapp/fsnotify
 
-This repository contains the `go-serverapp/fsnotify` library (or command).
+This repository contains the `go-serverapp/fsnotify` library.
 
 To install:
 

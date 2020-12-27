@@ -1,6 +1,6 @@
 # go-serverapp/web
 
-This repository contains the `go-serverapp/web` library (or command).
+This repository contains the `go-serverapp/web` library.
 
 To install:
 

@@ -1,6 +1,6 @@
 # go-serverapp/app
 
-This repository contains the `go-serverapp/app` library (or command).
+This repository contains the `go-serverapp/app` library.
 
 To install:
 

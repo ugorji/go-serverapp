@@ -1,6 +1,6 @@
 # go-serverapp/db
 
-This repository contains the `go-serverapp/db` library (or command).
+This repository contains the `go-serverapp/db` library.
 
 To install:
 
